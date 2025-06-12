@@ -37,6 +37,7 @@ services:
       - DATABASE_URL=postgres://scheduleease:password@postgres:5432/scheduleease_development
       - REDIS_URL=redis://redis:6379/0
       - RAILS_ENV=development
+<<<<<<< HEAD
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_NAME=scheduleease_development
@@ -46,6 +47,8 @@ services:
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - FRONTEND_URL=http://localhost:3000
+=======
+>>>>>>> 815a16d (Revert "Initialized Postgres")
     volumes:
       - ./api:/app
     depends_on:
@@ -73,6 +76,7 @@ services:
       - DATABASE_URL=postgres://scheduleease:password@postgres:5432/scheduleease_development
       - REDIS_URL=redis://redis:6379/0
       - RAILS_ENV=development
+<<<<<<< HEAD
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_NAME=scheduleease_development
@@ -81,6 +85,8 @@ services:
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - FRONTEND_URL=http://localhost:3000
+=======
+>>>>>>> 815a16d (Revert "Initialized Postgres")
     volumes:
       - ./api:/app
     depends_on:
