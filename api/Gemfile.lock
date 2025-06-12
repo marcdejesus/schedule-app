@@ -337,6 +337,7 @@ PLATFORMS
 
 DEPENDENCIES
   annotate
+  bcrypt (~> 3.1.7)
   bootsnap
   chronic
   database_cleaner-active_record
