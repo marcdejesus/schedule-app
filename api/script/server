@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+
+# Custom Rails server script to bypass Logger loading issues
+
+require 'logger'
+
+# Ensure Logger is globally available
+Object.const_set(:Logger, Logger) unless defined?(::Logger)
+
+# Set up bundler
+ENV['BUNDLE_GEMFILE'] ||= File.expand_path('../../Gemfile', __FILE__)
+require 'bundler/setup'
+
+# Load Rails environment directly
+require_relative '../config/environment'
+
+# Start Puma server
+require 'puma'
+require 'puma/cli'
+
+# Configure Puma
+options = {
+  :Host => '0.0.0.0',
+  :Port => 3001,
+  :environment => ENV['RAILS_ENV'] || 'development',
+  :verbose => true
+}
+
+# Start the server
+cli = Puma::CLI.new([])
+cli.run 

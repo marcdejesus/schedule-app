@@ -1,5 +1,8 @@
 require_relative "boot"
 
+# Ensure Logger is available before Rails loads
+require "logger" unless defined?(Logger)
+
 require "rails/all"
 
 # Require the gems listed in Gemfile, including any gems
@@ -9,7 +12,7 @@ Bundler.require(*Rails.groups)
 module ScheduleEaseApi
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 7.0
+    config.load_defaults 6.1
 
     # Configuration for the application, engines, and railties goes here.
     #

@@ -31,6 +31,15 @@ docker-compose up -d postgres redis
 echo "⏳ Waiting for services to be ready..."
 sleep 10
 
+echo "📦 Installing API dependencies..."
+docker-compose run --rm api bundle install
+
+echo "🔍 Testing Rails installation..."
+docker-compose run --rm api bundle exec ruby -e "puts 'Ruby working!'"
+
+echo "🔍 Testing Rails load..."
+docker-compose run --rm api bundle exec ruby -e "require 'rails'; puts 'Rails loaded!'"
+
 echo "🏗️  Setting up database..."
 docker-compose run --rm api bundle exec rails db:create db:migrate db:seed
 

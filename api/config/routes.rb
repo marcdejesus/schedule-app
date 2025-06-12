@@ -5,9 +5,9 @@ Rails.application.routes.draw do
     omniauth_callbacks: 'users/omniauth_callbacks'
   }
 
-  # Mount Sidekiq Web UI for admin users
-  require 'sidekiq/web'
-  mount Sidekiq::Web => '/sidekiq'
+  # Mount Sidekiq Web UI for admin users (uncomment when needed)
+  # require 'sidekiq/web'
+  # mount Sidekiq::Web => '/sidekiq'
 
   # API routes
   namespace :api do
@@ -51,9 +51,9 @@ Rails.application.routes.draw do
   # Health check endpoint
   get '/health', to: proc { [200, {}, ['OK']] }
 
-  # API documentation
-  mount Rswag::Ui::Engine => '/api-docs'
-  mount Rswag::Api::Engine => '/api-docs'
+  # API documentation (uncomment when rswag is enabled)
+  # mount Rswag::Ui::Engine => '/api-docs'
+  # mount Rswag::Api::Engine => '/api-docs'
 
   # Catch-all route for frontend
   get '*path', to: proc { [404, {}, ['Not Found']] }, constraints: lambda { |req|
