@@ -62,6 +62,8 @@ env.docker
 .env.development.local
 .env.test.local
 .env.production.local
+.env
+.env.docker
 
 # Logs
 npm-debug.log*
