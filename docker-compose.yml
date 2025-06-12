@@ -37,6 +37,12 @@ services:
       - DATABASE_URL=postgres://scheduleease:password@postgres:5432/scheduleease_development
       - REDIS_URL=redis://redis:6379/0
       - RAILS_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=scheduleease_development
+      - DB_USERNAME=scheduleease
+      - DB_PASSWORD=password
+      - JWT_SECRET=your_jwt_secret_key_here_change_in_production
     volumes:
       - ./api:/app
       - api_bundle:/usr/local/bundle
@@ -55,6 +61,11 @@ services:
       - DATABASE_URL=postgres://scheduleease:password@postgres:5432/scheduleease_development
       - REDIS_URL=redis://redis:6379/0
       - RAILS_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=scheduleease_development
+      - DB_USERNAME=scheduleease
+      - DB_PASSWORD=password
     volumes:
       - ./api:/app
       - api_bundle:/usr/local/bundle
