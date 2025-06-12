@@ -1,4 +1,4 @@
-FROM ruby:3.1.0-alpine
+FROM ruby:3.2.3-alpine
 
 # Install dependencies
 RUN apk add --no-cache \
@@ -7,19 +7,36 @@ RUN apk add --no-cache \
     git \
     tzdata \
     nodejs \
-    npm
+    npm \
+    curl
 
 # Set working directory
 WORKDIR /app
 
+# Create a non-root user
+RUN addgroup -g 1000 app && \
+    adduser -u 1000 -G app -s /bin/sh -D app
+
 # Copy Gemfile and install gems
 COPY Gemfile ./
 COPY Gemfile.lock ./
-RUN bundle config set --local without 'development test' && \
-    bundle install
+
+# Install bootsnap and gems
+RUN gem install bootsnap -v '1.18.6' && \
+    bundle config set --local without 'development test' && \
+    bundle install && \
+    rm -rf /usr/local/bundle/cache/*.gem && \
+    find /usr/local/bundle/gems/ -name "*.c" -delete && \
+    find /usr/local/bundle/gems/ -name "*.o" -delete
 
 # Copy application code
 COPY . .
+
+# Set proper ownership
+RUN chown -R app:app /app
+
+# Switch to non-root user
+USER app
 
 # Expose port
 EXPOSE 3001

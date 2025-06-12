@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+
+# Custom server startup script to bypass Rails logger formatter issue
+# Load Rails environment
+require_relative '../config/environment'
+
+# Ensure logger is properly initialized
+Rails.logger ||= ActiveSupport::Logger.new(STDOUT)
+Rails.logger.formatter = ActiveSupport::Logger::SimpleFormatter.new if Rails.logger.respond_to?(:formatter=)
+
+# Start Puma server
+require 'puma/cli'
+
+# Initialize Puma CLI with proper arguments and localhost binding
+cli = Puma::CLI.new(["-C", "config/puma.rb", "-b", "tcp://127.0.0.1:5000"])
+cli.run 

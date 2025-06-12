@@ -32,7 +32,7 @@ services:
       context: ./api
       dockerfile: Dockerfile.dev
     ports:
-      - "3001:3001"
+      - "3002:3002"
     environment:
       - DATABASE_URL=postgres://scheduleease:password@postgres:5432/scheduleease_development
       - REDIS_URL=redis://redis:6379/0
@@ -43,15 +43,27 @@ services:
       - DB_USERNAME=scheduleease
       - DB_PASSWORD=password
       - JWT_SECRET=your_jwt_secret_key_here_change_in_production
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - FRONTEND_URL=http://localhost:3000
     volumes:
       - ./api:/app
-      - api_bundle:/usr/local/bundle
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: bash -c "bundle install && bundle exec puma config.ru -b tcp://0.0.0.0:3001"
+    stdin_open: true
+    tty: true
+    command: |
+      bash -c "
+        while ! nc -z postgres 5432; do
+          echo 'Waiting for PostgreSQL to be ready...'
+          sleep 2
+        done &&
+        bundle exec rails db:create db:migrate &&
+        ./bin/start_server
+      "
 
   sidekiq:
     build:
@@ -66,15 +78,24 @@ services:
       - DB_NAME=scheduleease_development
       - DB_USERNAME=scheduleease
       - DB_PASSWORD=password
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - FRONTEND_URL=http://localhost:3000
     volumes:
       - ./api:/app
-      - api_bundle:/usr/local/bundle
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: bash -c "bundle install && bundle exec sidekiq"
+    command: |
+      bash -c "
+        while ! nc -z postgres 5432; do
+          echo 'Waiting for PostgreSQL to be ready...'
+          sleep 2
+        done &&
+        bundle exec sidekiq
+      "
 
   frontend:
     build:
@@ -95,5 +116,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
-  api_bundle:
   frontend_node_modules: 

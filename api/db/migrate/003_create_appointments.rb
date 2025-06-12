@@ -12,8 +12,6 @@ class CreateAppointments < ActiveRecord::Migration[7.0]
       t.timestamps
     end
 
-    add_index :appointments, :provider_id
-    add_index :appointments, :client_id
     add_index :appointments, :start_time
     add_index :appointments, :end_time
     add_index :appointments, :status

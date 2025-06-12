@@ -5,6 +5,11 @@ Rails.application.routes.draw do
     omniauth_callbacks: 'users/omniauth_callbacks'
   }
 
+  # OAuth initiation routes
+  get '/auth/google_oauth2', to: redirect { |params, request|
+    "/users/auth/google_oauth2"
+  }
+
   # Mount Sidekiq Web UI for admin users (uncomment when needed)
   # require 'sidekiq/web'
   # mount Sidekiq::Web => '/sidekiq'
@@ -18,6 +23,13 @@ Rails.application.routes.draw do
           get :me
           get :providers
         end
+      end
+
+      # OAuth routes
+      namespace :auth do
+        get 'google', to: redirect { |params, request|
+          "/users/auth/google_oauth2"
+        }
       end
 
       # Availability slots routes

@@ -10,7 +10,6 @@ class CreateAvailabilitySlots < ActiveRecord::Migration[7.0]
       t.timestamps
     end
 
-    add_index :availability_slots, :user_id
     add_index :availability_slots, :start_time
     add_index :availability_slots, :end_time
     add_index :availability_slots, [:user_id, :start_time]
