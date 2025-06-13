@@ -99,7 +99,7 @@ export default function Home() {
         {/* Footer */}
         <footer className="border-t border-gray-200 mt-24 py-8">
           <div className="max-w-7xl mx-auto px-6 text-center text-gray-600">
-            <p>&copy; 2024 SchedulEase. Built with ❤️ using Rails and Next.js.</p>
+            <p>&copy; 2025 SchedulEase. Built by <a href="https://marcdejesusdev.com">Marc De Jesus</a> using Rails and Next.js.</p>
           </div>
         </footer>
       </div>
