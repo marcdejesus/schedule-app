@@ -62,10 +62,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onS
     }
     
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-    const redirectUri = `${window.location.origin}/auth/callback`;
+    // Don't pass a custom redirect_uri - let OmniAuth use the default
     // Use state parameter to indicate this is a signup flow
     const state = encodeURIComponent(JSON.stringify({ signup: true }));
-    window.location.href = `${apiUrl}/users/auth/google_oauth2?redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`;
+    window.location.href = `${apiUrl}/users/auth/google_oauth2?state=${state}`;
   };
 
   return (

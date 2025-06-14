@@ -7,12 +7,16 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
     @user = User.from_omniauth(request.env["omniauth.auth"])
     token = nil
     
-    # Check if this is a signup flow
+    # Check if this is a signup flow using the state parameter
     is_signup = false
-    original_redirect_uri = request.env['omniauth.params']['redirect_uri']
-    if original_redirect_uri && original_redirect_uri.include?('signup=true')
-      is_signup = true
-      Rails.logger.info "OAuth signup flow detected from redirect: #{original_redirect_uri}"
+    if request.env['omniauth.params'] && request.env['omniauth.params']['state']
+      begin
+        state = JSON.parse(URI.decode_www_form_component(request.env['omniauth.params']['state']))
+        is_signup = state['signup'] == true
+        Rails.logger.info "OAuth signup flow detected from state parameter: #{is_signup}"
+      rescue JSON::ParserError => e
+        Rails.logger.warn "Could not parse state parameter: #{e.message}"
+      end
     end
 
     if @user.persisted?
