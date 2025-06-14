@@ -1,35 +1,10 @@
 // frontend/src/pages/providers.tsx
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useProviders } from '@/hooks/useProviders';
 import { User } from '@/types/auth';
-import { providerApi, ProviderError } from '@/lib/provider';
-import { useAuth } from '@/hooks/useAuth';
-import { toast } from 'react-hot-toast';
 
 const ProvidersPage: React.FC = () => {
-  const { token } = useAuth();
-  const [providers, setProviders] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchProviders = async () => {
-      if (!token) {
-        setIsLoading(false);
-        return;
-      }
-      try {
-        setIsLoading(true);
-        const providerData = await providerApi.getProviders();
-        setProviders(providerData);
-      } catch (error) {
-        const message = error instanceof ProviderError ? error.message : 'Failed to fetch providers';
-        toast.error(message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProviders();
-  }, [token]);
+  const { data: providers, isLoading } = useProviders();
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -39,7 +14,7 @@ const ProvidersPage: React.FC = () => {
     <div>
       <h1>Providers</h1>
       <ul>
-        {providers.map((provider) => (
+        {providers?.map((provider: User) => (
           <li key={provider.id}>{provider.name}</li>
         ))}
       </ul>

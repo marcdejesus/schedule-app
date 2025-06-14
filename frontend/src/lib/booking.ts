@@ -14,8 +14,7 @@ import { TimezoneUtils } from './timezone';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 // Create axios instance with auth header for authenticated requests
-const createAuthHeaders = () => {
-  const token = localStorage.getItem('auth_token');
+const createAuthHeaders = (token: string | null) => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
@@ -156,7 +155,9 @@ export const bookingApi = {
 // Authenticated appointment API (for logged-in users)
 export const appointmentApi = {
   // Get appointments for current user
-  async getAppointments(filters?: {
+  async getAppointments(
+    token: string | null,
+    filters?: {
     start_date?: string;
     end_date?: string;
     status?: string;
@@ -172,7 +173,7 @@ export const appointmentApi = {
 
       const response = await axios.get(
         `${API_BASE_URL}/api/v1/appointments?${params.toString()}`,
-        { headers: createAuthHeaders() }
+        { headers: createAuthHeaders(token) }
       );
 
       return response.data;
@@ -186,12 +187,12 @@ export const appointmentApi = {
   },
 
   // Create appointment (authenticated)
-  async createAppointment(data: CreateAppointmentData): Promise<AppointmentResponse> {
+  async createAppointment(token: string | null, data: CreateAppointmentData): Promise<AppointmentResponse> {
     try {
       const response = await axios.post(
         `${API_BASE_URL}/api/v1/appointments`,
         { appointment: data },
-        { headers: createAuthHeaders() }
+        { headers: createAuthHeaders(token) }
       );
 
       return response.data;
@@ -205,12 +206,12 @@ export const appointmentApi = {
   },
 
   // Cancel appointment
-  async cancelAppointment(appointmentId: string, reason?: string): Promise<void> {
+  async cancelAppointment(token: string | null, appointmentId: string, reason?: string): Promise<void> {
     try {
       await axios.patch(
         `${API_BASE_URL}/api/v1/appointments/${appointmentId}/cancel`,
         { cancellation_reason: reason },
-        { headers: createAuthHeaders() }
+        { headers: createAuthHeaders(token) }
       );
     } catch (error: any) {
       throw new BookingError(
@@ -222,12 +223,12 @@ export const appointmentApi = {
   },
 
   // Confirm appointment (provider only)
-  async confirmAppointment(appointmentId: string): Promise<void> {
+  async confirmAppointment(token: string | null, appointmentId: string): Promise<void> {
     try {
       await axios.patch(
         `${API_BASE_URL}/api/v1/appointments/${appointmentId}/confirm`,
         {},
-        { headers: createAuthHeaders() }
+        { headers: createAuthHeaders(token) }
       );
     } catch (error: any) {
       throw new BookingError(

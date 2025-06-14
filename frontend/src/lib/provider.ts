@@ -11,8 +11,7 @@ export class ProviderError extends Error {
 }
 
 export const providerApi = {
-  async getProviders(): Promise<User[]> {
-    const token = tokenStorage.get();
+  async getProviders(token: string | null): Promise<User[]> {
     if (!token) {
       throw new ProviderError('Not authenticated');
     }

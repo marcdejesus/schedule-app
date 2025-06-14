@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { toast } from 'react-hot-toast';
 import { appointmentApi } from '@/lib/booking';
 import { AppointmentsResponse, AppointmentWithUsers } from '@/types/appointments';
+import { useAuth } from './useAuth';
 
 interface AppointmentFilters {
   start_date?: string;
@@ -12,6 +13,7 @@ interface AppointmentFilters {
 
 export const useAppointments = (filters?: AppointmentFilters) => {
   const queryClient = useQueryClient();
+  const { token } = useAuth();
 
   // Fetch appointments with filters
   const {
@@ -20,9 +22,10 @@ export const useAppointments = (filters?: AppointmentFilters) => {
     error,
     refetch
   } = useQuery(
-    ['appointments', filters],
-    () => appointmentApi.getAppointments(filters),
+    ['appointments', filters, token],
+    () => appointmentApi.getAppointments(token, filters),
     {
+      enabled: !!token,
       onError: (error: any) => {
         toast.error(error.message || 'Failed to fetch appointments');
       }
@@ -37,7 +40,7 @@ export const useAppointments = (filters?: AppointmentFilters) => {
   // Cancel appointment mutation
   const cancelAppointmentMutation = useMutation(
     ({ appointmentId, reason }: { appointmentId: string; reason?: string }) =>
-      appointmentApi.cancelAppointment(appointmentId, reason),
+      appointmentApi.cancelAppointment(token, appointmentId, reason),
     {
       onSuccess: () => {
         queryClient.invalidateQueries(['appointments']);
@@ -51,7 +54,7 @@ export const useAppointments = (filters?: AppointmentFilters) => {
 
   // Confirm appointment mutation
   const confirmAppointmentMutation = useMutation(
-    (appointmentId: string) => appointmentApi.confirmAppointment(appointmentId),
+    (appointmentId: string) => appointmentApi.confirmAppointment(token, appointmentId),
     {
       onSuccess: () => {
         queryClient.invalidateQueries(['appointments']);
@@ -76,12 +79,14 @@ export const useAppointments = (filters?: AppointmentFilters) => {
 };
 
 export const useUpcomingAppointments = () => {
+  const { token } = useAuth();
   return useQuery(
-    ['appointments', 'upcoming'],
-    () => appointmentApi.getAppointments({
+    ['appointments', 'upcoming', token],
+    () => appointmentApi.getAppointments(token, {
       start_date: new Date().toISOString().split('T')[0]
     }),
     {
+      enabled: !!token,
       onError: (error: any) => {
         toast.error(error.message || 'Failed to fetch upcoming appointments');
       }
@@ -90,15 +95,17 @@ export const useUpcomingAppointments = () => {
 };
 
 export const usePastAppointments = () => {
+  const { token } = useAuth();
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   
   return useQuery(
-    ['appointments', 'past'],
-    () => appointmentApi.getAppointments({
+    ['appointments', 'past', token],
+    () => appointmentApi.getAppointments(token, {
       end_date: yesterday.toISOString().split('T')[0]
     }),
     {
+      enabled: !!token,
       onError: (error: any) => {
         toast.error(error.message || 'Failed to fetch past appointments');
       }
