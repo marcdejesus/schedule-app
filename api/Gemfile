@@ -41,6 +41,7 @@ gem "rack-cors"
 # Authentication
 gem "devise"
 gem "jwt"
+gem "devise-jwt"
 
 # OmniAuth for OAuth integration
 gem "omniauth"

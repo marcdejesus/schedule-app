@@ -1,6 +1,4 @@
 class Api::V1::SessionsController < ApplicationController
-  before_action :authenticate_user!, except: [:create, :destroy_all_sessions]
-
   # GET /api/v1/sessions
   def index
     render json: {
@@ -11,7 +9,7 @@ class Api::V1::SessionsController < ApplicationController
         last_sign_in_ip: current_user.last_sign_in_ip,
         sign_in_count: current_user.sign_in_count
       }
-    }
+    }, status: :unauthorized
   end
 
   # POST /api/v1/sessions
@@ -29,6 +27,9 @@ class Api::V1::SessionsController < ApplicationController
       #   return
       # end
 
+      # Generate JWT token via devise-jwt
+      token = Warden::JWTAuth::UserEncoder.new.call(user, :user, nil).first
+      
       # Update sign in tracking
       user.update!(
         sign_in_count: user.sign_in_count + 1,
@@ -38,9 +39,6 @@ class Api::V1::SessionsController < ApplicationController
         last_sign_in_ip: user.current_sign_in_ip,
         remember_created_at: params[:remember_me] ? Time.current : nil
       )
-
-      # Generate JWT token
-      token = generate_jwt_token(user)
 
       render json: {
         message: 'Signed in successfully',
@@ -66,7 +64,8 @@ class Api::V1::SessionsController < ApplicationController
   # DELETE /api/v1/sessions
   def destroy
     if current_user
-      current_user.update!(remember_created_at: nil)
+      # Sign out via devise-jwt
+      Warden::JWTAuth::TokenRevoker.new.call(request.headers['Authorization']&.split(' ')&.last)
       render json: {
         message: 'Signed out successfully'
       }, status: :ok

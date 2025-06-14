@@ -2,32 +2,27 @@ module JwtAuthenticatable
   extend ActiveSupport::Concern
 
   included do
-    before_action :authenticate_user_from_jwt
+    before_action :authenticate_user_from_token!
     attr_reader :current_user
   end
 
   private
 
-  def authenticate_user_from_jwt
-    token = extract_token_from_request
-    return render_unauthorized unless token
+  def authenticate_user_from_token!
+    token = request.headers['Authorization']&.split(' ')&.last
+    return unless token
 
-    @current_user = JwtService.get_user_from_token(token)
-    return render_unauthorized unless @current_user && JwtService.valid_token?(token)
+    begin
+      decoded_token = JWT.decode(token, Rails.application.credentials.secret_key_base, true, algorithm: 'HS256')
+      user_id = decoded_token[0]['user_id']
+      @current_user = User.find(user_id)
+    rescue JWT::DecodeError
+      render json: { error: 'Invalid token' }, status: :unauthorized
+    end
   end
 
-  def extract_token_from_request
-    auth_header = request.headers['Authorization']
-    return nil unless auth_header && auth_header.start_with?('Bearer ')
-    
-    auth_header.split(' ').last
-  end
-
-  def render_unauthorized
-    render json: {
-      message: 'Unauthorized access. Please login.',
-      error: 'invalid_token'
-    }, status: :unauthorized
+  def current_user
+    @current_user
   end
 
   def require_admin
