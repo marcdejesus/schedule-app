@@ -25,7 +25,7 @@ export const useAppointments = (filters?: AppointmentFilters) => {
     ['appointments', filters, token],
     () => appointmentApi.getAppointments(token, filters),
     {
-      enabled: !!token,
+      enabled: !!token, // Only run the query if the token exists
       onError: (error: any) => {
         toast.error(error.message || 'Failed to fetch appointments');
       }
@@ -86,7 +86,7 @@ export const useUpcomingAppointments = () => {
       start_date: new Date().toISOString().split('T')[0]
     }),
     {
-      enabled: !!token,
+      enabled: !!token, // Only run the query if the token exists
       onError: (error: any) => {
         toast.error(error.message || 'Failed to fetch upcoming appointments');
       }
@@ -105,10 +105,10 @@ export const usePastAppointments = () => {
       end_date: yesterday.toISOString().split('T')[0]
     }),
     {
-      enabled: !!token,
+      enabled: !!token, // Only run the query if the token exists
       onError: (error: any) => {
         toast.error(error.message || 'Failed to fetch past appointments');
       }
     }
   );
-}; 
+};
