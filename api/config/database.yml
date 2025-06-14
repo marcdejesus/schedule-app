@@ -2,22 +2,25 @@ default: &default
   adapter: postgresql
   encoding: unicode
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-  host: <%= ENV.fetch("DB_HOST") { "localhost" } %>
-  username: <%= ENV.fetch("DB_USERNAME") { "scheduleease" } %>
-  password: <%= ENV.fetch("DB_PASSWORD") { "password" } %>
 
 development:
   <<: *default
   database: scheduleease_development
+  host: <%= ENV.fetch("DB_HOST") { "localhost" } %>
+  username: <%= ENV.fetch("DB_USERNAME") { "scheduleease" } %>
+  password: <%= ENV.fetch("DB_PASSWORD") { "password" } %>
 
 test:
   <<: *default
   database: scheduleease_test
+  host: <%= ENV.fetch("DB_HOST") { "localhost" } %>
+  username: <%= ENV.fetch("DB_USERNAME") { "scheduleease" } %>
+  password: <%= ENV.fetch("DB_PASSWORD") { "password" } %>
 
 production:
   <<: *default
   database: scheduleease_production
-  username: <%= ENV.fetch("DB_USERNAME") { "scheduleease" } %>
-  password: <%= ENV.fetch("DB_PASSWORD") %>
   host: <%= ENV.fetch("DB_HOST") %>
+  username: <%= ENV.fetch("DB_USERNAME") %>
+  password: <%= ENV.fetch("DB_PASSWORD") %>
   port: <%= ENV.fetch("DB_PORT") { 5432 } %> 

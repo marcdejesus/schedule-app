@@ -74,6 +74,11 @@ jobs:
       run: bundle exec rspec
     
     - name: Run security audit
+      env:
+        DB_HOST: localhost
+        DB_USERNAME: scheduleease
+        DB_PASSWORD: password
+        DB_PORT: 5432
       run: |
         gem install bundler-audit
         bundle audit --update
@@ -105,6 +110,8 @@ jobs:
       run: npm test || echo "Tests not configured yet"
     
     - name: Build application
+      env:
+        NEXT_PUBLIC_API_URL: http://localhost:3002
       run: npm run build
 
   lint-and-format:
@@ -122,6 +129,11 @@ jobs:
     
     - name: Run RuboCop
       working-directory: ./api
+      env:
+        DB_HOST: localhost
+        DB_USERNAME: scheduleease
+        DB_PASSWORD: password
+        DB_PORT: 5432
       run: bundle exec rubocop --auto-correct || true
     
     - name: Set up Node.js
