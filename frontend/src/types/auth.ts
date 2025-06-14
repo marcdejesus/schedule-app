@@ -31,6 +31,7 @@ export interface AuthContextType {
   logout: () => void;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isInitialized: boolean;
   revalidate: () => Promise<User | null>;
   handleOAuthCallback: (token: string, signupData?: { role?: string }) => Promise<User>;
 } 

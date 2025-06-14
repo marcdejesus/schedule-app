@@ -13,9 +13,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
   const revalidatingRef = useRef(false);
 
-  const isAuthenticated = !!user && !!token;
+  const isAuthenticated = !!user && !!token && isInitialized;
 
   const revalidate = async () => {
     // Prevent multiple simultaneous revalidation calls
@@ -48,7 +49,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
           
           // Clear invalid token
-          logout();
+          setUser(null);
+          setToken(null);
+          tokenStorage.remove();
           return null;
         }
       } else {
@@ -60,10 +63,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('useAuth: Unexpected error during revalidation:', error);
       // Clear everything on unexpected errors
-      logout();
+      setUser(null);
+      setToken(null);
+      tokenStorage.remove();
       return null;
     } finally {
       setIsLoading(false);
+      setIsInitialized(true); // Mark as initialized regardless of success/failure
       revalidatingRef.current = false;
     }
   };
@@ -77,6 +83,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } catch (error) {
         // This catch block ensures no unhandled promise rejections
         console.error('useAuth: Error during initialization:', error);
+        // Ensure we're marked as initialized even on error
+        setIsInitialized(true);
+        setIsLoading(false);
       }
     };
 
@@ -90,6 +99,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       setUser(response.user);
       setToken(response.token);
+      setIsInitialized(true);
       tokenStorage.set(response.token);
       
       toast.success(response.message || 'Login successful!');
@@ -109,6 +119,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       setUser(response.user);
       setToken(response.token);
+      setIsInitialized(true);
       tokenStorage.set(response.token);
       
       toast.success(response.message || 'Registration successful!');
@@ -131,6 +142,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // If we get a valid response, set user and token
       setUser(response.user);
       setToken(response.token);
+      setIsInitialized(true);
       tokenStorage.set(response.token);
       
       toast.success('Authentication successful!');
@@ -151,6 +163,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setToken(null);
     tokenStorage.remove();
     revalidatingRef.current = false; // Reset revalidation flag
+    // Keep isInitialized as true - we're still initialized, just not authenticated
+    
     // Don't show toast if user is null (silent logout due to invalid token)
     if (user) {
       toast.success('Logged out successfully');
@@ -165,6 +179,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     isLoading,
     isAuthenticated,
+    isInitialized,
     revalidate,
     handleOAuthCallback,
   };

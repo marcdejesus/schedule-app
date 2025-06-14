@@ -29,7 +29,10 @@ const transformAppointmentData = (appointmentsResponse: AppointmentsResponse | u
 
 export const useAppointments = (filters?: AppointmentFilters) => {
   const queryClient = useQueryClient();
-  const { token, isAuthenticated, logout } = useAuth();
+  const { token, isAuthenticated, isInitialized, logout } = useAuth();
+
+  // Only enable queries if auth is initialized AND user is authenticated
+  const shouldRunQuery = isInitialized && isAuthenticated && !!token;
 
   // Fetch appointments with filters
   const {
@@ -41,7 +44,7 @@ export const useAppointments = (filters?: AppointmentFilters) => {
     [QUERY_KEYS.appointments, filters, token],
     () => appointmentApi.getAppointments(token, filters),
     {
-      enabled: !!token && isAuthenticated, // Only run if properly authenticated
+      enabled: shouldRunQuery,
       onError: (error: any) => {
         console.error('Appointments fetch error:', error);
         
@@ -125,7 +128,10 @@ export const useAppointments = (filters?: AppointmentFilters) => {
 };
 
 export const useUpcomingAppointments = () => {
-  const { token, isAuthenticated, logout } = useAuth();
+  const { token, isAuthenticated, isInitialized, logout } = useAuth();
+  
+  // Only enable queries if auth is initialized AND user is authenticated
+  const shouldRunQuery = isInitialized && isAuthenticated && !!token;
   
   // Memoize the date to prevent unnecessary re-renders
   const todayDate = useMemo(() => new Date().toISOString().split('T')[0], []);
@@ -136,7 +142,7 @@ export const useUpcomingAppointments = () => {
       start_date: todayDate
     }),
     {
-      enabled: !!token && isAuthenticated, // Only run if properly authenticated
+      enabled: shouldRunQuery,
       onError: (error: any) => {
         console.error('Upcoming appointments fetch error:', error);
         
@@ -159,7 +165,10 @@ export const useUpcomingAppointments = () => {
 };
 
 export const usePastAppointments = () => {
-  const { token, isAuthenticated, logout } = useAuth();
+  const { token, isAuthenticated, isInitialized, logout } = useAuth();
+  
+  // Only enable queries if auth is initialized AND user is authenticated
+  const shouldRunQuery = isInitialized && isAuthenticated && !!token;
   
   // Memoize the yesterday date to prevent recreation on every render
   const yesterdayDate = useMemo(() => {
@@ -174,7 +183,7 @@ export const usePastAppointments = () => {
       end_date: yesterdayDate
     }),
     {
-      enabled: !!token && isAuthenticated, // Only run if properly authenticated
+      enabled: shouldRunQuery,
       onError: (error: any) => {
         console.error('Past appointments fetch error:', error);
         
