@@ -222,7 +222,7 @@ export const authApi = {
     return result;
   },
 
-  async verifyOAuthToken(token: string): Promise<AuthResponse> {
+  async verifyOAuthToken(token: string, signupData?: { role?: string }): Promise<AuthResponse> {
     console.log('authApi: verifyOAuthToken called');
     const response = await fetch(`${API_BASE_URL}/api/v1/auth/oauth/verify`, {
       method: 'POST',
@@ -230,6 +230,7 @@ export const authApi = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
+      body: signupData ? JSON.stringify(signupData) : undefined
     });
 
     const data = await response.json();

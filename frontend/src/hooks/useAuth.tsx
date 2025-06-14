@@ -85,12 +85,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
   
-  const handleOAuthCallback = async (token: string) => {
+  const handleOAuthCallback = async (token: string, signupData?: { role?: string }) => {
     try {
       setIsLoading(true);
       
       // First, verify the OAuth token with our backend
-      const response = await authApi.verifyOAuthToken(token);
+      const response = await authApi.verifyOAuthToken(token, signupData);
       
       // If we get a valid response, set user and token
       setUser(response.user);

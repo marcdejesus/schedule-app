@@ -13,14 +13,15 @@ export default function OAuthCallback() {
     // Only proceed when router is ready
     if (!router.isReady) return;
     
-    const { token, error } = router.query;
+    const { token, error, signup } = router.query;
+    const isSignup = signup === 'true';
     
     if (error && typeof error === 'string') {
       setError(error);
       setStatus('error');
       // Redirect back to login after a delay
       setTimeout(() => {
-        router.push('/login');
+        router.push(isSignup ? '/register' : '/login');
       }, 3000);
       return;
     }
@@ -30,13 +31,30 @@ export default function OAuthCallback() {
       setError('No authentication token provided');
       setStatus('error');
       setTimeout(() => {
-        router.push('/login');
+        router.push(isSignup ? '/register' : '/login');
       }, 2000);
       return;
     }
 
+    // Get role from localStorage if this is a signup flow
+    let role: string | null = null;
+    if (isSignup) {
+      role = localStorage.getItem('oauth_signup_role');
+      // Clear it once used
+      localStorage.removeItem('oauth_signup_role');
+      
+      if (!role) {
+        setError('No role selected for signup');
+        setStatus('error');
+        setTimeout(() => {
+          router.push('/register');
+        }, 2000);
+        return;
+      }
+    }
+
     // Process the OAuth token
-    handleOAuthCallback(token)
+    handleOAuthCallback(token, isSignup ? { role } : undefined)
       .then(() => {
         // Set success status
         setStatus('success');
@@ -51,7 +69,7 @@ export default function OAuthCallback() {
         setStatus('error');
         // Redirect back to login after a delay
         setTimeout(() => {
-          router.push('/login');
+          router.push(isSignup ? '/register' : '/login');
         }, 3000);
       });
   }, [router.isReady, router.query, router, handleOAuthCallback]);
@@ -65,7 +83,7 @@ export default function OAuthCallback() {
         {status === 'error' ? (
           <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
             {error || 'Authentication error'}
-            <p className="text-sm mt-2">Redirecting to login...</p>
+            <p className="text-sm mt-2">Redirecting you...</p>
           </div>
         ) : status === 'success' ? (
           <>

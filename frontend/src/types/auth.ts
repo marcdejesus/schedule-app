@@ -32,5 +32,5 @@ export interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   revalidate: () => Promise<User | null>;
-  handleOAuthCallback: (token: string) => Promise<User>;
+  handleOAuthCallback: (token: string, signupData?: { role?: string }) => Promise<User>;
 } 

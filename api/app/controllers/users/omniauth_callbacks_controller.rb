@@ -6,6 +6,14 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
     Rails.logger.info "OmniAuth callback received: #{request.env['omniauth.auth'].to_h.inspect}"
     @user = User.from_omniauth(request.env["omniauth.auth"])
     token = nil
+    
+    # Check if this is a signup flow
+    is_signup = false
+    original_redirect_uri = request.env['omniauth.params']['redirect_uri']
+    if original_redirect_uri && original_redirect_uri.include?('signup=true')
+      is_signup = true
+      Rails.logger.info "OAuth signup flow detected from redirect: #{original_redirect_uri}"
+    end
 
     if @user.persisted?
       Rails.logger.info "User persisted: #{@user.email}"
@@ -20,7 +28,9 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
           token: token
         }, status: :ok
       else
+        # Add signup parameter if this was a signup flow
         redirect_url = "#{frontend_url}/auth/callback?token=#{token}&success=true"
+        redirect_url += "&signup=true" if is_signup
         Rails.logger.info "Redirecting to frontend: #{redirect_url}"
         redirect_to redirect_url
       end

@@ -41,6 +41,9 @@ Rails.application.routes.draw do
           "/users/auth/google_oauth2"
         }
         
+        # OAuth verification
+        post 'oauth/verify', to: 'auth#oauth_verify'
+        
         # Password reset
         post 'password/reset', to: 'passwords#create'
         put 'password/reset', to: 'passwords#update'
