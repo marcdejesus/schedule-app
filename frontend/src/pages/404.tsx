@@ -48,8 +48,8 @@ export default function Custom404() {
               </h2>
               
               <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                It looks like the page you're looking for doesn't exist. 
-                Don't worry - it happens to the best of us! Let's get you back on track.
+                It looks like the page you&apos;re looking for doesn&apos;t exist. 
+                Don&apos;t worry - it happens to the best of us! Let&apos;s get you back on track.
               </p>
 
               {/* Action Buttons */}
@@ -73,7 +73,7 @@ export default function Custom404() {
             {/* Fun Message */}
             <div className="mt-8 text-gray-500">
               <p className="text-sm italic">
-                "The best time to schedule an appointment was yesterday. The second best time is now... on a page that exists! 📅"
+                &quot;The best time to schedule an appointment was yesterday. The second best time is now... on a page that exists! 📅&quot;
               </p>
             </div>
           </div>

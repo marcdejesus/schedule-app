@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 # Custom Rails server script to bypass Logger loading issues
 
@@ -20,10 +21,10 @@ require 'puma/cli'
 
 # Configure Puma
 options = {
-  :Host => '0.0.0.0',
-  :Port => 3001,
-  :environment => ENV['RAILS_ENV'] || 'development',
-  :verbose => true
+  Host: '0.0.0.0',
+  Port: 3001,
+  environment: ENV['RAILS_ENV'] || 'development',
+  verbose: true
 }
 
 # Start the server

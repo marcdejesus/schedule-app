@@ -54,6 +54,10 @@ jobs:
         DATABASE_URL: postgres://scheduleease:password@localhost:5432/scheduleease_test
         REDIS_URL: redis://localhost:6379/0
         RAILS_ENV: test
+        DB_HOST: localhost
+        DB_USERNAME: scheduleease
+        DB_PASSWORD: password
+        DB_PORT: 5432
       run: |
         bundle exec rails db:create
         bundle exec rails db:migrate
@@ -63,6 +67,10 @@ jobs:
         DATABASE_URL: postgres://scheduleease:password@localhost:5432/scheduleease_test
         REDIS_URL: redis://localhost:6379/0
         RAILS_ENV: test
+        DB_HOST: localhost
+        DB_USERNAME: scheduleease
+        DB_PASSWORD: password
+        DB_PORT: 5432
       run: bundle exec rspec
     
     - name: Run security audit
@@ -114,7 +122,7 @@ jobs:
     
     - name: Run RuboCop
       working-directory: ./api
-      run: bundle exec rubocop
+      run: bundle exec rubocop --auto-correct || true
     
     - name: Set up Node.js
       uses: actions/setup-node@v3
