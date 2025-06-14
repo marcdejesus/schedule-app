@@ -2,6 +2,8 @@ Rails.application.routes.draw do
   devise_for :users, controllers: {
     sessions: 'users/sessions',
     registrations: 'users/registrations',
+    passwords: 'users/passwords',
+    confirmations: 'users/confirmations',
     omniauth_callbacks: 'users/omniauth_callbacks'
   }
 
@@ -25,11 +27,29 @@ Rails.application.routes.draw do
         end
       end
 
-      # OAuth routes
+      # Authentication routes
+      resources :sessions, only: [:index, :create, :destroy] do
+        collection do
+          delete :all, action: :destroy_all_sessions
+          get :current
+        end
+      end
+
+      # Password reset routes
       namespace :auth do
         get 'google', to: redirect { |params, request|
           "/users/auth/google_oauth2"
         }
+        
+        # Password reset
+        post 'password/reset', to: 'passwords#create'
+        put 'password/reset', to: 'passwords#update'
+        get 'password/reset/verify', to: 'passwords#edit'
+        
+        # Email confirmation
+        post 'email/resend_confirmation', to: 'confirmations#create'
+        get 'email/confirm', to: 'confirmations#show'
+        get 'email/verify', to: 'confirmations#verify'
       end
 
       # Availability slots routes

@@ -2,6 +2,7 @@ class User < ApplicationRecord
   # Include default devise modules
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable,
+         :trackable,
          :omniauthable, omniauth_providers: [:google_oauth2]
 
   # Enums
@@ -23,10 +24,14 @@ class User < ApplicationRecord
   # Callbacks
   before_validation :set_default_role, on: :create
   before_validation :set_default_timezone, on: :create
+  after_create :auto_confirm_user
+  # Temporarily disabled: after_create :send_welcome_notification
 
   # Scopes
   scope :providers, -> { where(role: :provider) }
   scope :clients, -> { where(role: :client) }
+  scope :confirmed, -> { where.not(confirmed_at: nil) }
+  scope :unconfirmed, -> { where(confirmed_at: nil) }
 
   # Class methods
   def self.from_omniauth(auth)
@@ -36,6 +41,7 @@ class User < ApplicationRecord
       user.password = Devise.friendly_token[0, 20]
       user.provider_id = auth.provider
       user.uid = auth.uid
+      user.confirmed_at = Time.current # Auto-confirm OAuth users
     end
   end
 
@@ -59,6 +65,23 @@ class User < ApplicationRecord
     availability_slots.for_date(date)
   end
 
+  def email_verified?
+    confirmed_at.present?
+  end
+
+  def password_reset_pending?
+    reset_password_token.present? && reset_password_sent_at.present? &&
+      reset_password_sent_at > 2.hours.ago
+  end
+
+  def can_request_password_reset?
+    !password_reset_pending?
+  end
+
+  def sessions_active?
+    remember_created_at.present? && remember_created_at > 30.days.ago
+  end
+
   private
 
   def set_default_role
@@ -67,5 +90,15 @@ class User < ApplicationRecord
 
   def set_default_timezone
     self.timezone ||= 'UTC'
+  end
+
+  def auto_confirm_user
+    # Auto-confirm users to avoid email issues during development
+    self.update_column(:confirmed_at, Time.current) if confirmed_at.nil?
+  end
+
+  def send_welcome_notification
+    # Send welcome email after user creation
+    UserMailer.welcome_email(self).deliver_later if persisted?
   end
 end 
