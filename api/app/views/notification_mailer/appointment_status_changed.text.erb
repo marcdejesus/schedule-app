@@ -1,0 +1,25 @@
+Appointment Status Update
+
+Dear <%= @recipient.name %>,
+
+The status of your appointment has been updated to: <%= @appointment.status.capitalize %>
+
+Date: <%= @appointment.formatted_date %>
+Time: <%= @appointment.formatted_time %>
+Provider: <%= @appointment.provider.name %>
+Client: <%= @appointment.client.name %>
+Status: <%= @appointment.status.capitalize %>
+<% if @appointment.notes.present? %>
+Notes: <%= @appointment.notes %>
+<% end %>
+
+<% if @appointment.cancelled? %>
+This appointment has been cancelled. If you have any questions, please contact us.
+<% elsif @appointment.confirmed? %>
+Your appointment is now confirmed. We look forward to seeing you!
+<% end %>
+
+Thank you for using SchedulEase!
+
+Best regards,
+The SchedulEase Team 

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Appointment Confirmation</title>
+  </head>
+  <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h1 style="color: #333;">Appointment Confirmation</h1>
+    
+    <p>Dear <%= @recipient.name %>,</p>
+    
+    <p>Your appointment has been confirmed with the following details:</p>
+    
+    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
+      <p><strong>Date:</strong> <%= @appointment.formatted_date %></p>
+      <p><strong>Time:</strong> <%= @appointment.formatted_time %></p>
+      <p><strong>Provider:</strong> <%= @appointment.provider.name %></p>
+      <p><strong>Client:</strong> <%= @appointment.client.name %></p>
+      <% if @appointment.notes.present? %>
+        <p><strong>Notes:</strong> <%= @appointment.notes %></p>
+      <% end %>
+    </div>
+    
+    <p>If you need to reschedule or cancel this appointment, please contact us as soon as possible.</p>
+    
+    <p>Thank you for using SchedulEase!</p>
+    
+    <p>Best regards,<br>
+    The SchedulEase Team</p>
+  </body>
+</html> 

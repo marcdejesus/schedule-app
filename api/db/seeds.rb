@@ -34,10 +34,16 @@ end
 puts "✅ Created client: #{client.email}"
 
 # Create sample availability slots for the provider
-if provider.availability_slots.empty?
-  # Monday to Friday, 9 AM to 5 PM
+# Check if availability slots exist for next week
+next_week_start = Date.current.next_week.beginning_of_week
+next_week_slots = provider.availability_slots.where(
+  start_time: next_week_start.beginning_of_day..next_week_start.end_of_week.end_of_day
+)
+
+if next_week_slots.empty?
+  # Monday to Friday next week, 9 AM to 5 PM
   (1..5).each do |day_offset|
-    date = Date.current.beginning_of_week + day_offset.days
+    date = next_week_start + day_offset.days
     
     # Morning slot: 9 AM - 12 PM
     provider.availability_slots.create!(
@@ -54,16 +60,20 @@ if provider.availability_slots.empty?
     )
   end
   
-  puts "✅ Created #{provider.availability_slots.count} availability slots for #{provider.name}"
+  puts "✅ Created #{next_week_slots.reload.count} availability slots for #{provider.name}"
+else
+  puts "✅ Availability slots already exist for #{provider.name}"
 end
 
 # Create sample appointment
 if Appointment.count == 0
+  # Use next Monday + 10 AM to ensure it's in the future
+  appointment_date = Date.current.next_week.beginning_of_week + 1.day # Next Monday
   appointment = Appointment.create!(
     provider: provider,
     client: client,
-    start_time: Date.current.next_weekday.beginning_of_day + 10.hours,
-    end_time: Date.current.next_weekday.beginning_of_day + 11.hours,
+    start_time: appointment_date.beginning_of_day + 10.hours,
+    end_time: appointment_date.beginning_of_day + 11.hours,
     status: 'confirmed',
     notes: 'Initial consultation'
   )

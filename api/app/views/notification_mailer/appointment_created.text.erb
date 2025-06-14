@@ -1,0 +1,20 @@
+Appointment Confirmation
+
+Dear <%= @recipient.name %>,
+
+Your appointment has been confirmed with the following details:
+
+Date: <%= @appointment.formatted_date %>
+Time: <%= @appointment.formatted_time %>
+Provider: <%= @appointment.provider.name %>
+Client: <%= @appointment.client.name %>
+<% if @appointment.notes.present? %>
+Notes: <%= @appointment.notes %>
+<% end %>
+
+If you need to reschedule or cancel this appointment, please contact us as soon as possible.
+
+Thank you for using SchedulEase!
+
+Best regards,
+The SchedulEase Team 

@@ -11,6 +11,6 @@ Rails.logger.formatter = ActiveSupport::Logger::SimpleFormatter.new if Rails.log
 # Start Puma server
 require 'puma/cli'
 
-# Initialize Puma CLI with proper arguments and localhost binding
-cli = Puma::CLI.new(["-C", "config/puma.rb", "-b", "tcp://127.0.0.1:5000"])
+# Initialize Puma CLI with proper arguments and bind to all interfaces
+cli = Puma::CLI.new(["-C", "config/puma.rb", "-b", "tcp://0.0.0.0:3002"])
 cli.run 
