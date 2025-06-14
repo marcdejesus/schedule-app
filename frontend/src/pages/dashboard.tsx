@@ -101,7 +101,17 @@ const DashboardPage: React.FC = () => {
                 </p>
                 
                 <div className="flex justify-center space-x-4">
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md font-medium">
+                  <button 
+                    onClick={() => {
+                      if (user.role === 'provider' || user.role === 'admin') {
+                        router.push('/availability');
+                      } else {
+                        // TODO: Navigate to booking page when it's created
+                        alert('Booking page coming soon!');
+                      }
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md font-medium"
+                  >
                     {user.role === 'provider' ? 'Manage Availability' : 'Book Appointment'}
                   </button>
                   <button className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-md font-medium">
