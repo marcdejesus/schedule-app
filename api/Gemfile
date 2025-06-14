@@ -78,8 +78,6 @@ group :development, :test do
   gem "rubocop"
   gem "rubocop-rails"
   gem "rubocop-rspec"
-  gem "rubocop-performance"
-  gem "rubocop-security"
   
   # Security scanning
   gem "brakeman"
