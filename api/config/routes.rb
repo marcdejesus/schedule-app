@@ -23,9 +23,11 @@ Rails.application.routes.draw do
       resources :users, only: [:show, :update, :destroy] do
         collection do
           get :me
-          get :providers
         end
       end
+
+      # Provider routes
+      resources :providers, only: [:index]
 
       # Authentication routes
       resources :sessions, only: [:index, :create, :destroy] do
