@@ -16,24 +16,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const isAuthenticated = !!user && !!token;
 
+  const revalidate = async () => {
+    const storedToken = tokenStorage.get();
+    if (storedToken) {
+      try {
+        setIsLoading(true);
+        const userData = await authApi.getCurrentUser(storedToken);
+        setUser(userData);
+        setToken(storedToken);
+      } catch (error) {
+        console.error('Failed to revalidate user:', error);
+        logout();
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      setIsLoading(false);
+    }
+  };
+
   // Load user from token on mount
   useEffect(() => {
-    const loadUser = async () => {
-      const storedToken = tokenStorage.get();
-      if (storedToken) {
-        try {
-          const userData = await authApi.getCurrentUser(storedToken);
-          setUser(userData);
-          setToken(storedToken);
-        } catch (error) {
-          console.error('Failed to load user:', error);
-          tokenStorage.remove();
-        }
-      }
-      setIsLoading(false);
-    };
-
-    loadUser();
+    revalidate();
   }, []);
 
   const login = async (data: LoginData) => {
@@ -89,6 +93,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     isLoading,
     isAuthenticated,
+    revalidate,
   };
 
   return (

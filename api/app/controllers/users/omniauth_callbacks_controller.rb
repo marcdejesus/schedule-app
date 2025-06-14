@@ -1,11 +1,13 @@
 class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
+  skip_before_action :authenticate_user_unless_public_endpoint!
   respond_to :json
 
   def google_oauth2
     @user = User.from_omniauth(request.env["omniauth.auth"])
+    token = nil
 
     if @user.persisted?
-      sign_in_and_redirect @user, event: :authentication
+      sign_in @user
       token = encode_jwt_token(@user)
       
       if request.xhr?

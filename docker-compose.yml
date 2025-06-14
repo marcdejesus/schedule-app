@@ -32,7 +32,7 @@ services:
       context: ./api
       dockerfile: Dockerfile.dev
     ports:
-      - "3002:3002"
+      - "3001:3001"
     environment:
       - DATABASE_URL=postgres://scheduleease:password@postgres:5432/scheduleease_development
       - REDIS_URL=redis://redis:6379/0
@@ -116,7 +116,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:3002
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
       - NODE_ENV=development
     volumes:
       - ./frontend:/app
