@@ -3,6 +3,7 @@ import { toast } from 'react-hot-toast';
 import { appointmentApi } from '@/lib/booking';
 import { AppointmentsResponse, AppointmentWithUsers } from '@/types/appointments';
 import { useAuth } from './useAuth';
+import { useMemo } from 'react';
 
 interface AppointmentFilters {
   start_date?: string;
@@ -11,9 +12,24 @@ interface AppointmentFilters {
   provider_id?: string;
 }
 
+// Query key constants for better maintainability
+const QUERY_KEYS = {
+  appointments: 'appointments',
+  upcoming: 'upcoming',
+  past: 'past',
+} as const;
+
+// Utility function to transform appointment data
+const transformAppointmentData = (appointmentsResponse: AppointmentsResponse | undefined): AppointmentWithUsers[] => {
+  return appointmentsResponse?.data?.map(item => ({
+    ...item.attributes,
+    id: item.id
+  })) || [];
+};
+
 export const useAppointments = (filters?: AppointmentFilters) => {
   const queryClient = useQueryClient();
-  const { token } = useAuth();
+  const { token, isAuthenticated, logout } = useAuth();
 
   // Fetch appointments with filters
   const {
@@ -22,20 +38,36 @@ export const useAppointments = (filters?: AppointmentFilters) => {
     error,
     refetch
   } = useQuery(
-    ['appointments', filters, token],
+    [QUERY_KEYS.appointments, filters, token],
     () => appointmentApi.getAppointments(token, filters),
     {
-      enabled: !!token, // Only run the query if the token exists
+      enabled: !!token && isAuthenticated, // Only run if properly authenticated
       onError: (error: any) => {
+        console.error('Appointments fetch error:', error);
+        
+        // Handle authentication errors
+        if (error?.statusCode === 401 || error?.statusCode === 403) {
+          console.log('Authentication error in appointments, logging out');
+          logout();
+          return;
+        }
+        
         toast.error(error.message || 'Failed to fetch appointments');
+      },
+      retry: (failureCount, error: any) => {
+        // Don't retry on authentication errors
+        if (error?.statusCode === 401 || error?.statusCode === 403) {
+          return false;
+        }
+        return failureCount < 3;
       }
     }
   );
 
-  const appointments: AppointmentWithUsers[] = appointmentsResponse?.data?.map(item => ({
-    ...item.attributes,
-    id: item.id
-  })) || [];
+  const appointments: AppointmentWithUsers[] = useMemo(
+    () => transformAppointmentData(appointmentsResponse),
+    [appointmentsResponse]
+  );
 
   // Cancel appointment mutation
   const cancelAppointmentMutation = useMutation(
@@ -43,10 +75,17 @@ export const useAppointments = (filters?: AppointmentFilters) => {
       appointmentApi.cancelAppointment(token, appointmentId, reason),
     {
       onSuccess: () => {
-        queryClient.invalidateQueries(['appointments']);
+        queryClient.invalidateQueries([QUERY_KEYS.appointments]);
         toast.success('Appointment cancelled successfully');
       },
       onError: (error: any) => {
+        console.error('Cancel appointment error:', error);
+        
+        if (error?.statusCode === 401 || error?.statusCode === 403) {
+          logout();
+          return;
+        }
+        
         toast.error(error.message || 'Failed to cancel appointment');
       }
     }
@@ -57,10 +96,17 @@ export const useAppointments = (filters?: AppointmentFilters) => {
     (appointmentId: string) => appointmentApi.confirmAppointment(token, appointmentId),
     {
       onSuccess: () => {
-        queryClient.invalidateQueries(['appointments']);
+        queryClient.invalidateQueries([QUERY_KEYS.appointments]);
         toast.success('Appointment confirmed successfully');
       },
       onError: (error: any) => {
+        console.error('Confirm appointment error:', error);
+        
+        if (error?.statusCode === 401 || error?.statusCode === 403) {
+          logout();
+          return;
+        }
+        
         toast.error(error.message || 'Failed to confirm appointment');
       }
     }
@@ -79,35 +125,72 @@ export const useAppointments = (filters?: AppointmentFilters) => {
 };
 
 export const useUpcomingAppointments = () => {
-  const { token } = useAuth();
+  const { token, isAuthenticated, logout } = useAuth();
+  
+  // Memoize the date to prevent unnecessary re-renders
+  const todayDate = useMemo(() => new Date().toISOString().split('T')[0], []);
+  
   return useQuery(
-    ['appointments', 'upcoming', token],
+    [QUERY_KEYS.appointments, QUERY_KEYS.upcoming, token, todayDate],
     () => appointmentApi.getAppointments(token, {
-      start_date: new Date().toISOString().split('T')[0]
+      start_date: todayDate
     }),
     {
-      enabled: !!token, // Only run the query if the token exists
+      enabled: !!token && isAuthenticated, // Only run if properly authenticated
       onError: (error: any) => {
+        console.error('Upcoming appointments fetch error:', error);
+        
+        if (error?.statusCode === 401 || error?.statusCode === 403) {
+          console.log('Authentication error in upcoming appointments, logging out');
+          logout();
+          return;
+        }
+        
         toast.error(error.message || 'Failed to fetch upcoming appointments');
+      },
+      retry: (failureCount, error: any) => {
+        if (error?.statusCode === 401 || error?.statusCode === 403) {
+          return false;
+        }
+        return failureCount < 3;
       }
     }
   );
 };
 
 export const usePastAppointments = () => {
-  const { token } = useAuth();
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
+  const { token, isAuthenticated, logout } = useAuth();
+  
+  // Memoize the yesterday date to prevent recreation on every render
+  const yesterdayDate = useMemo(() => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return yesterday.toISOString().split('T')[0];
+  }, []);
   
   return useQuery(
-    ['appointments', 'past', token],
+    [QUERY_KEYS.appointments, QUERY_KEYS.past, token, yesterdayDate],
     () => appointmentApi.getAppointments(token, {
-      end_date: yesterday.toISOString().split('T')[0]
+      end_date: yesterdayDate
     }),
     {
-      enabled: !!token, // Only run the query if the token exists
+      enabled: !!token && isAuthenticated, // Only run if properly authenticated
       onError: (error: any) => {
+        console.error('Past appointments fetch error:', error);
+        
+        if (error?.statusCode === 401 || error?.statusCode === 403) {
+          console.log('Authentication error in past appointments, logging out');
+          logout();
+          return;
+        }
+        
         toast.error(error.message || 'Failed to fetch past appointments');
+      },
+      retry: (failureCount, error: any) => {
+        if (error?.statusCode === 401 || error?.statusCode === 403) {
+          return false;
+        }
+        return failureCount < 3;
       }
     }
   );

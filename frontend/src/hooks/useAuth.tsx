@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
 import { User, AuthContextType, LoginData, RegisterData } from '@/types/auth';
 import { authApi, tokenStorage, AuthError } from '@/lib/auth';
 import { toast } from 'react-hot-toast';
@@ -13,38 +13,74 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const revalidatingRef = useRef(false);
 
   const isAuthenticated = !!user && !!token;
 
   const revalidate = async () => {
+    // Prevent multiple simultaneous revalidation calls
+    if (revalidatingRef.current) {
+      console.log('useAuth: revalidate already in progress, skipping');
+      return null;
+    }
+
     console.log('useAuth: revalidate called');
-    const storedToken = tokenStorage.get();
-    if (storedToken) {
-      try {
+    revalidatingRef.current = true;
+    
+    try {
+      const storedToken = tokenStorage.get();
+      if (storedToken) {
         console.log('useAuth: Found stored token. Fetching user.');
         setIsLoading(true);
-        const userData = await authApi.getCurrentUser(storedToken);
-        console.log('useAuth: Got user data', userData);
-        setUser(userData);
-        setToken(storedToken);
-        return userData;
-      } catch (error) {
-        console.error('useAuth: Failed to revalidate user:', error);
-        logout();
-        throw error;
-      } finally {
-        setIsLoading(false);
+        
+        try {
+          const userData = await authApi.getCurrentUser(storedToken);
+          console.log('useAuth: Got user data', userData);
+          setUser(userData);
+          setToken(storedToken);
+          return userData;
+        } catch (error) {
+          console.error('useAuth: Failed to revalidate user:', error);
+          
+          // Only show error toast if it's not a 401 (invalid token)
+          if (error instanceof AuthError && error.status !== 401) {
+            toast.error('Session validation failed. Please log in again.');
+          }
+          
+          // Clear invalid token
+          logout();
+          return null;
+        }
+      } else {
+        console.log('useAuth: No stored token found.');
+        setUser(null);
+        setToken(null);
+        return null;
       }
-    } else {
-      console.log('useAuth: No stored token found.');
-      setIsLoading(false);
+    } catch (error) {
+      console.error('useAuth: Unexpected error during revalidation:', error);
+      // Clear everything on unexpected errors
+      logout();
       return null;
+    } finally {
+      setIsLoading(false);
+      revalidatingRef.current = false;
     }
   };
 
   // Load user from token on mount
   useEffect(() => {
-    revalidate();
+    // Wrap revalidate in an async function to properly handle the promise
+    const initializeAuth = async () => {
+      try {
+        await revalidate();
+      } catch (error) {
+        // This catch block ensures no unhandled promise rejections
+        console.error('useAuth: Error during initialization:', error);
+      }
+    };
+
+    initializeAuth();
   }, []);
 
   const login = async (data: LoginData) => {
@@ -110,10 +146,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = () => {
+    console.log('useAuth: logout called');
     setUser(null);
     setToken(null);
     tokenStorage.remove();
-    toast.success('Logged out successfully');
+    revalidatingRef.current = false; // Reset revalidation flag
+    // Don't show toast if user is null (silent logout due to invalid token)
+    if (user) {
+      toast.success('Logged out successfully');
+    }
   };
 
   const value: AuthContextType = {
