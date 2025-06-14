@@ -27,6 +27,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log('useAuth: Got user data', userData);
         setUser(userData);
         setToken(storedToken);
+        return userData;
       } catch (error) {
         console.error('useAuth: Failed to revalidate user:', error);
         logout();
@@ -37,6 +38,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } else {
       console.log('useAuth: No stored token found.');
       setIsLoading(false);
+      return null;
     }
   };
 
@@ -82,6 +84,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(false);
     }
   };
+  
+  const handleOAuthCallback = async (token: string) => {
+    try {
+      setIsLoading(true);
+      
+      // First, verify the OAuth token with our backend
+      const response = await authApi.verifyOAuthToken(token);
+      
+      // If we get a valid response, set user and token
+      setUser(response.user);
+      setToken(response.token);
+      tokenStorage.set(response.token);
+      
+      toast.success('Authentication successful!');
+      return response.user;
+    } catch (error) {
+      const message = error instanceof AuthError ? error.message : 'OAuth authentication failed';
+      toast.error(message);
+      tokenStorage.remove();
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const logout = () => {
     setUser(null);
@@ -99,6 +125,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoading,
     isAuthenticated,
     revalidate,
+    handleOAuthCallback,
   };
 
   return (

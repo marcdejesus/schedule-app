@@ -221,6 +221,24 @@ export const authApi = {
 
     return result;
   },
+
+  async verifyOAuthToken(token: string): Promise<AuthResponse> {
+    console.log('authApi: verifyOAuthToken called');
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/oauth/verify`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new AuthError(data.message || 'Failed to verify OAuth token', response.status);
+    }
+    
+    return data;
+  },
 };
 
 // Token management utilities

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '@/hooks/useAuth';
 import { LoginData } from '@/types/auth';
+import { useRouter } from 'next/router';
 
 interface LoginFormProps {
   onSwitchToRegister?: () => void;
@@ -9,14 +10,35 @@ interface LoginFormProps {
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSuccess }) => {
-  const { login, isLoading } = useAuth();
+  const { login, isLoading, handleOAuthCallback } = useAuth();
   const [serverError, setServerError] = useState<string>('');
-
+  const router = useRouter();
+  
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginData>();
+
+  // Handle OAuth redirect with token in query params
+  useEffect(() => {
+    const { token, error } = router.query;
+    
+    if (token && typeof token === 'string') {
+      // Process OAuth token
+      handleOAuthCallback(token).then(() => {
+        router.replace(router.pathname);
+        onSuccess?.();
+      }).catch(() => {
+        setServerError('Failed to authenticate with Google');
+      });
+    }
+    
+    if (error && typeof error === 'string') {
+      setServerError(error);
+      router.replace(router.pathname);
+    }
+  }, [router.query, router, onSuccess, handleOAuthCallback]);
 
   const onSubmit = async (data: LoginData) => {
     try {
@@ -26,6 +48,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSucc
     } catch (error) {
       setServerError('Invalid email or password');
     }
+  };
+
+  const handleGoogleSignIn = () => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const redirectUri = `${window.location.origin}/auth/callback`;
+    window.location.href = `${apiUrl}/users/auth/google_oauth2?redirect_uri=${encodeURIComponent(redirectUri)}`;
   };
 
   return (
@@ -118,12 +146,18 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSucc
           </div>
 
           <div>
-            <a
-              href={`${process.env.NEXT_PUBLIC_API_URL}/users/auth/google_oauth2`}
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
               className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
             >
+              <img 
+                src="https://developers.google.com/identity/images/g-logo.png" 
+                alt="Google logo" 
+                className="h-5 w-5 mr-2"
+              />
               Sign in with Google
-            </a>
+            </button>
           </div>
 
           <div className="text-center">
