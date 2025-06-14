@@ -31,8 +31,26 @@ export const useAppointments = (filters?: AppointmentFilters) => {
   const queryClient = useQueryClient();
   const { token, isAuthenticated, isInitialized, logout } = useAuth();
 
-  // Only enable queries if auth is initialized AND user is authenticated
-  const shouldRunQuery = isInitialized && isAuthenticated && !!token;
+  console.log('useAppointments - Auth state:', { 
+    token: !!token, 
+    isAuthenticated, 
+    isInitialized
+  });
+
+  // If auth is not initialized or user is not authenticated, return early with empty state
+  if (!isInitialized || !isAuthenticated || !token) {
+    console.log('useAppointments - Auth not ready, returning early');
+    return {
+      appointments: [],
+      isLoading: false,
+      error: null,
+      refetch: () => Promise.resolve(),
+      cancelAppointment: () => {},
+      confirmAppointment: () => {},
+      isCancelling: false,
+      isConfirming: false
+    };
+  }
 
   // Fetch appointments with filters
   const {
@@ -42,9 +60,11 @@ export const useAppointments = (filters?: AppointmentFilters) => {
     refetch
   } = useQuery(
     [QUERY_KEYS.appointments, filters, token],
-    () => appointmentApi.getAppointments(token, filters),
+    () => {
+      console.log('useAppointments - Running query with token:', !!token);
+      return appointmentApi.getAppointments(token, filters);
+    },
     {
-      enabled: shouldRunQuery,
       onError: (error: any) => {
         console.error('Appointments fetch error:', error);
         
@@ -130,19 +150,35 @@ export const useAppointments = (filters?: AppointmentFilters) => {
 export const useUpcomingAppointments = () => {
   const { token, isAuthenticated, isInitialized, logout } = useAuth();
   
-  // Only enable queries if auth is initialized AND user is authenticated
-  const shouldRunQuery = isInitialized && isAuthenticated && !!token;
+  console.log('useUpcomingAppointments - Auth state:', { 
+    token: !!token, 
+    isAuthenticated, 
+    isInitialized 
+  });
+  
+  // If auth is not initialized or user is not authenticated, return early with empty state
+  if (!isInitialized || !isAuthenticated || !token) {
+    console.log('useUpcomingAppointments - Auth not ready, returning early');
+    return {
+      data: undefined,
+      isLoading: false,
+      error: null,
+      refetch: () => Promise.resolve()
+    };
+  }
   
   // Memoize the date to prevent unnecessary re-renders
   const todayDate = useMemo(() => new Date().toISOString().split('T')[0], []);
   
   return useQuery(
     [QUERY_KEYS.appointments, QUERY_KEYS.upcoming, token, todayDate],
-    () => appointmentApi.getAppointments(token, {
-      start_date: todayDate
-    }),
+    () => {
+      console.log('useUpcomingAppointments - Running query with token:', !!token);
+      return appointmentApi.getAppointments(token, {
+        start_date: todayDate
+      });
+    },
     {
-      enabled: shouldRunQuery,
       onError: (error: any) => {
         console.error('Upcoming appointments fetch error:', error);
         
@@ -167,8 +203,22 @@ export const useUpcomingAppointments = () => {
 export const usePastAppointments = () => {
   const { token, isAuthenticated, isInitialized, logout } = useAuth();
   
-  // Only enable queries if auth is initialized AND user is authenticated
-  const shouldRunQuery = isInitialized && isAuthenticated && !!token;
+  console.log('usePastAppointments - Auth state:', { 
+    token: !!token, 
+    isAuthenticated, 
+    isInitialized 
+  });
+  
+  // If auth is not initialized or user is not authenticated, return early with empty state
+  if (!isInitialized || !isAuthenticated || !token) {
+    console.log('usePastAppointments - Auth not ready, returning early');
+    return {
+      data: undefined,
+      isLoading: false,
+      error: null,
+      refetch: () => Promise.resolve()
+    };
+  }
   
   // Memoize the yesterday date to prevent recreation on every render
   const yesterdayDate = useMemo(() => {
@@ -179,11 +229,13 @@ export const usePastAppointments = () => {
   
   return useQuery(
     [QUERY_KEYS.appointments, QUERY_KEYS.past, token, yesterdayDate],
-    () => appointmentApi.getAppointments(token, {
-      end_date: yesterdayDate
-    }),
+    () => {
+      console.log('usePastAppointments - Running query with token:', !!token);
+      return appointmentApi.getAppointments(token, {
+        end_date: yesterdayDate
+      });
+    },
     {
-      enabled: shouldRunQuery,
       onError: (error: any) => {
         console.error('Past appointments fetch error:', error);
         

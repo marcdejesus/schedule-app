@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useRef, useCallback } from 'react';
 import { User, AuthContextType, LoginData, RegisterData } from '@/types/auth';
 import { authApi, tokenStorage, AuthError } from '@/lib/auth';
 import { toast } from 'react-hot-toast';
@@ -16,9 +16,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isInitialized, setIsInitialized] = useState(false);
   const revalidatingRef = useRef(false);
 
+  console.log('useAuth - State:', { 
+    isAuthenticated: !!user, 
+    isLoading, 
+    isInitialized, 
+    hasToken: !!token,
+    revalidating: revalidatingRef.current 
+  });
+
   const isAuthenticated = !!user && !!token && isInitialized;
 
-  const revalidate = async () => {
+  // Debug logging for auth state changes
+  useEffect(() => {
+    console.log('useAuth - State changed:', { 
+      hasUser: !!user, 
+      hasToken: !!token, 
+      isLoading, 
+      isInitialized, 
+      isAuthenticated 
+    });
+  }, [user, token, isLoading, isInitialized, isAuthenticated]);
+
+  const revalidate = useCallback(async () => {
     // Prevent multiple simultaneous revalidation calls
     if (revalidatingRef.current) {
       console.log('useAuth: revalidate already in progress, skipping');
@@ -49,6 +68,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
           
           // Clear invalid token
+          console.log('useAuth: Clearing invalid token and user data');
           setUser(null);
           setToken(null);
           tokenStorage.remove();
@@ -71,8 +91,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(false);
       setIsInitialized(true); // Mark as initialized regardless of success/failure
       revalidatingRef.current = false;
+      console.log('useAuth: revalidate finished, isInitialized set to true');
     }
-  };
+  }, []);
 
   // Load user from token on mount
   useEffect(() => {
@@ -97,6 +118,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(true);
       const response = await authApi.login(data);
       
+      console.log('useAuth: Login successful, setting user and token');
       setUser(response.user);
       setToken(response.token);
       setIsInitialized(true);
