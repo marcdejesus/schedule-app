@@ -17,20 +17,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const isAuthenticated = !!user && !!token;
 
   const revalidate = async () => {
+    console.log('useAuth: revalidate called');
     const storedToken = tokenStorage.get();
     if (storedToken) {
       try {
+        console.log('useAuth: Found stored token. Fetching user.');
         setIsLoading(true);
         const userData = await authApi.getCurrentUser(storedToken);
+        console.log('useAuth: Got user data', userData);
         setUser(userData);
         setToken(storedToken);
       } catch (error) {
-        console.error('Failed to revalidate user:', error);
+        console.error('useAuth: Failed to revalidate user:', error);
         logout();
+        throw error;
       } finally {
         setIsLoading(false);
       }
     } else {
+      console.log('useAuth: No stored token found.');
       setIsLoading(false);
     }
   };

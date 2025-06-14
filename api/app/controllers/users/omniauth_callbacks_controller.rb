@@ -3,12 +3,15 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
   respond_to :json
 
   def google_oauth2
+    Rails.logger.info "OmniAuth callback received: #{request.env['omniauth.auth'].to_h.inspect}"
     @user = User.from_omniauth(request.env["omniauth.auth"])
     token = nil
 
     if @user.persisted?
+      Rails.logger.info "User persisted: #{@user.email}"
       sign_in @user
       token = encode_jwt_token(@user)
+      Rails.logger.info "Generated JWT for user: #{@user.email}"
       
       if request.xhr?
         render json: {
@@ -17,10 +20,12 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
           token: token
         }, status: :ok
       else
-        # For web-based OAuth flow, redirect to frontend with token
-        redirect_to "#{frontend_url}/auth/callback?token=#{token}&success=true"
+        redirect_url = "#{frontend_url}/auth/callback?token=#{token}&success=true"
+        Rails.logger.info "Redirecting to frontend: #{redirect_url}"
+        redirect_to redirect_url
       end
     else
+      Rails.logger.error "User not persisted. Errors: #{@user.errors.full_messages.join(', ')}"
       render json: {
         message: 'Could not authenticate with Google',
         errors: @user.errors.full_messages
@@ -30,6 +35,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
   def failure
     error_message = params[:error_description] || 'Authentication failed'
+    Rails.logger.error "OmniAuth failure: #{error_message}"
     
     if request.xhr?
       render json: {

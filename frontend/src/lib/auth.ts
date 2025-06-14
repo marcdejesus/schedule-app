@@ -47,14 +47,21 @@ export const authApi = {
   },
 
   async getCurrentUser(token: string): Promise<User> {
+    console.log('authApi: getCurrentUser called with token:', token);
     const response = await fetch(`${API_BASE_URL}/api/v1/sessions/current`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     });
+    console.log('authApi: getCurrentUser response status:', response.status);
 
     const data = await response.json();
+    console.log('authApi: getCurrentUser response data:', data);
+
+    if (!response.ok) {
+      throw new AuthError(data.message || 'Failed to get user', response.status);
+    }
     return data.data.attributes;
   },
 
