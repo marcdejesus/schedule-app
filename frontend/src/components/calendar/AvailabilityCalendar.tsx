@@ -6,7 +6,6 @@ import { useAvailability } from '@/hooks/useAvailability';
 import { calendarUtils } from '@/lib/availability';
 import { AvailabilitySlot, TimeSlot } from '@/types/availability';
 import 'react-calendar/dist/Calendar.css';
-import '@/styles/calendar.css';
 
 interface AvailabilityCalendarProps {
   userId?: string;

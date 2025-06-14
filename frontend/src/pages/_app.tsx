@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from 'react-query'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from '@/hooks/useAuth'
 import '@/styles/globals.css'
+import '@/styles/calendar.css'
 
 // Create a client
 const queryClient = new QueryClient({

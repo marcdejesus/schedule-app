@@ -54,7 +54,7 @@ export default function OAuthCallback() {
     }
 
     // Process the OAuth token
-    handleOAuthCallback(token, isSignup ? { role } : undefined)
+    handleOAuthCallback(token, isSignup && role ? { role } : undefined)
       .then(() => {
         // Set success status
         setStatus('success');

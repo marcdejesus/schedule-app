@@ -80,6 +80,17 @@ Rails.application.routes.draw do
           patch :mark_as_read
         end
       end
+
+      # Public API routes (no authentication required)
+      namespace :public do
+        resources :providers, only: [:show] do
+          member do
+            get :availability
+          end
+        end
+        
+        resources :bookings, only: [:create, :show]
+      end
     end
   end
 
