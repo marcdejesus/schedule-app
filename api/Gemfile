@@ -78,6 +78,12 @@ group :development, :test do
   gem "rubocop"
   gem "rubocop-rails"
   gem "rubocop-rspec"
+  gem "rubocop-performance"
+  gem "rubocop-security"
+  
+  # Security scanning
+  gem "brakeman"
+  gem "bundler-audit"
 end
 
 group :development do
@@ -94,4 +100,9 @@ group :test do
   gem "database_cleaner-active_record"
   gem "webmock"
   gem "vcr"
+  gem "simplecov", require: false
+  gem "simplecov-lcov", require: false
+  gem "rspec-json_expectations"
+  gem "timecop"
+  gem "pundit-matchers"
 end 
