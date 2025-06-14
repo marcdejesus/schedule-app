@@ -2,7 +2,6 @@ require:
   - rubocop-rails
   - rubocop-rspec
   - rubocop-performance
-  - rubocop-security
 
 AllCops:
   TargetRubyVersion: 3.2
