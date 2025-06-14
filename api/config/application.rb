@@ -27,7 +27,14 @@ module ScheduleEaseApi
     # CORS configuration
     config.middleware.insert_before 0, Rack::Cors do
       allow do
-        origins Rails.env.development? ? 'localhost:3000' : ENV['FRONTEND_URL']
+        origins case Rails.env
+                when 'development'
+                  'localhost:3000'
+                when 'test'
+                  'localhost:3000' # Use specific origin for test environment
+                else
+                  ENV['FRONTEND_URL'] || 'localhost:3000'
+                end
         resource '*',
           headers: :any,
           methods: [:get, :post, :put, :patch, :delete, :options, :head],

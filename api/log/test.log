@@ -1,0 +1,183 @@
+  [1m[35m (271.6ms)[0m  [1m[35mCREATE DATABASE "scheduleease_test" ENCODING = 'unicode'[0m
+  [1m[35m (24.6ms)[0m  [1m[35mCREATE TABLE "schema_migrations" ("version" character varying NOT NULL PRIMARY KEY)[0m
+  [1m[35m (6.5ms)[0m  [1m[35mCREATE TABLE "ar_internal_metadata" ("key" character varying NOT NULL PRIMARY KEY, "value" character varying, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL)[0m
+  [1m[35m (0.8ms)[0m  [1m[34mSELECT pg_try_advisory_lock(6350688824124126615)[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.5ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[36mActiveRecord::InternalMetadata Load (1.6ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = $1 ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "environment"]]
+  [1m[36mActiveRecord::InternalMetadata Create (3.7ms)[0m  [1m[32mINSERT INTO "ar_internal_metadata" ("key", "value", "created_at", "updated_at") VALUES ('environment', 'test', '2025-06-14 01:24:06.469457', '2025-06-14 01:24:06.469459') RETURNING "key"[0m
+Migrating to DeviseCreateUsers (1)
+  [1m[36mTRANSACTION (0.4ms)[0m  [1m[35mBEGIN[0m
+  [1m[35m (10.7ms)[0m  [1m[35mCREATE TABLE "users" ("id" bigserial primary key, "email" character varying DEFAULT '' NOT NULL, "encrypted_password" character varying DEFAULT '' NOT NULL, "reset_password_token" character varying, "reset_password_sent_at" timestamp(6), "remember_created_at" timestamp(6), "name" character varying NOT NULL, "role" integer DEFAULT 0 NOT NULL, "timezone" character varying DEFAULT 'UTC' NOT NULL, "phone_number" character varying, "provider_id" character varying, "uid" character varying, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL)[0m
+  [1m[35m (1.9ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_users_on_email" ON "users" ("email")[0m
+  [1m[35m (1.3ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_users_on_reset_password_token" ON "users" ("reset_password_token")[0m
+  [1m[35m (1.4ms)[0m  [1m[35mCREATE INDEX "index_users_on_role" ON "users" ("role")[0m
+  [1m[35m (1.5ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_users_on_provider_id_and_uid" ON "users" ("provider_id", "uid")[0m
+  [1m[36mActiveRecord::SchemaMigration Create (1.2ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('1') RETURNING "version"[0m
+  [1m[36mTRANSACTION (0.6ms)[0m  [1m[35mCOMMIT[0m
+Migrating to CreateAvailabilitySlots (2)
+  [1m[36mTRANSACTION (0.6ms)[0m  [1m[35mBEGIN[0m
+  [1m[35m (8.5ms)[0m  [1m[35mCREATE TABLE "availability_slots" ("id" bigserial primary key, "user_id" bigint NOT NULL, "start_time" timestamp(6) NOT NULL, "end_time" timestamp(6) NOT NULL, "recurring" boolean DEFAULT FALSE NOT NULL, "notes" text, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL, CONSTRAINT "fk_rails_10a7c3b986"
+FOREIGN KEY ("user_id")
+  REFERENCES "users" ("id")
+)[0m
+  [1m[35m (1.5ms)[0m  [1m[35mCREATE INDEX "index_availability_slots_on_user_id" ON "availability_slots" ("user_id")[0m
+  [1m[35m (2.0ms)[0m  [1m[35mCREATE INDEX "index_availability_slots_on_start_time" ON "availability_slots" ("start_time")[0m
+  [1m[35m (0.9ms)[0m  [1m[35mCREATE INDEX "index_availability_slots_on_end_time" ON "availability_slots" ("end_time")[0m
+  [1m[35m (1.0ms)[0m  [1m[35mCREATE INDEX "index_availability_slots_on_user_id_and_start_time" ON "availability_slots" ("user_id", "start_time")[0m
+  [1m[35m (1.6ms)[0m  [1m[35mCREATE INDEX "index_availability_slots_on_recurring" ON "availability_slots" ("recurring")[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.2ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('2') RETURNING "version"[0m
+  [1m[36mTRANSACTION (0.5ms)[0m  [1m[35mCOMMIT[0m
+Migrating to CreateAppointments (3)
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[35m (5.6ms)[0m  [1m[35mCREATE TABLE "appointments" ("id" bigserial primary key, "provider_id" bigint NOT NULL, "client_id" bigint NOT NULL, "start_time" timestamp(6) NOT NULL, "end_time" timestamp(6) NOT NULL, "status" integer DEFAULT 0 NOT NULL, "notes" text, "cancellation_reason" text, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL, CONSTRAINT "fk_rails_9563bcd74d"
+FOREIGN KEY ("provider_id")
+  REFERENCES "users" ("id")
+, CONSTRAINT "fk_rails_6497fe64e8"
+FOREIGN KEY ("client_id")
+  REFERENCES "users" ("id")
+)[0m
+  [1m[35m (1.1ms)[0m  [1m[35mCREATE INDEX "index_appointments_on_provider_id" ON "appointments" ("provider_id")[0m
+  [1m[35m (1.8ms)[0m  [1m[35mCREATE INDEX "index_appointments_on_client_id" ON "appointments" ("client_id")[0m
+  [1m[35m (1.7ms)[0m  [1m[35mCREATE INDEX "index_appointments_on_start_time" ON "appointments" ("start_time")[0m
+  [1m[35m (2.5ms)[0m  [1m[35mCREATE INDEX "index_appointments_on_end_time" ON "appointments" ("end_time")[0m
+  [1m[35m (1.2ms)[0m  [1m[35mCREATE INDEX "index_appointments_on_status" ON "appointments" ("status")[0m
+  [1m[35m (1.2ms)[0m  [1m[35mCREATE INDEX "index_appointments_on_provider_id_and_start_time" ON "appointments" ("provider_id", "start_time")[0m
+  [1m[35m (1.8ms)[0m  [1m[35mCREATE INDEX "index_appointments_on_client_id_and_start_time" ON "appointments" ("client_id", "start_time")[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.2ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('3') RETURNING "version"[0m
+  [1m[36mTRANSACTION (0.5ms)[0m  [1m[35mCOMMIT[0m
+Migrating to CreateNotifications (4)
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[35m (6.4ms)[0m  [1m[35mCREATE TABLE "notifications" ("id" bigserial primary key, "appointment_id" bigint NOT NULL, "user_id" bigint NOT NULL, "message" text NOT NULL, "notification_type" integer DEFAULT 0 NOT NULL, "status" integer DEFAULT 0 NOT NULL, "sent_at" timestamp(6), "retry_count" integer DEFAULT 0 NOT NULL, "error_message" text, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL, CONSTRAINT "fk_rails_9d113f9d4b"
+FOREIGN KEY ("appointment_id")
+  REFERENCES "appointments" ("id")
+, CONSTRAINT "fk_rails_b080fb4855"
+FOREIGN KEY ("user_id")
+  REFERENCES "users" ("id")
+)[0m
+  [1m[35m (1.5ms)[0m  [1m[35mCREATE INDEX "index_notifications_on_appointment_id" ON "notifications" ("appointment_id")[0m
+  [1m[35m (1.5ms)[0m  [1m[35mCREATE INDEX "index_notifications_on_user_id" ON "notifications" ("user_id")[0m
+  [1m[35m (1.1ms)[0m  [1m[35mCREATE INDEX "index_notifications_on_notification_type" ON "notifications" ("notification_type")[0m
+  [1m[35m (1.6ms)[0m  [1m[35mCREATE INDEX "index_notifications_on_status" ON "notifications" ("status")[0m
+  [1m[35m (1.1ms)[0m  [1m[35mCREATE INDEX "index_notifications_on_sent_at" ON "notifications" ("sent_at")[0m
+  [1m[35m (1.0ms)[0m  [1m[35mCREATE INDEX "index_notifications_on_user_id_and_status" ON "notifications" ("user_id", "status")[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.2ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('4') RETURNING "version"[0m
+  [1m[36mTRANSACTION (0.6ms)[0m  [1m[35mCOMMIT[0m
+  [1m[35m (0.3ms)[0m  [1m[34mSELECT pg_advisory_unlock(6350688824124126615)[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.2ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[36mActiveRecord::InternalMetadata Load (1.5ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = $1 ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "schema_sha1"]]
+  [1m[36mActiveRecord::SchemaMigration Load (1.0ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[36mActiveRecord::InternalMetadata Load (1.0ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = $1 ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "environment"]]
+  [1m[36mActiveRecord::SchemaMigration Load (0.3ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.4ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = $1 ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "environment"]]
+  [1m[36mActiveRecord::SchemaMigration Load (0.3ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.3ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = $1 ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "environment"]]
+  [1m[35m (34.1ms)[0m  [1m[35mDROP DATABASE IF EXISTS "scheduleease_test"[0m
+  [1m[35m (81.1ms)[0m  [1m[35mCREATE DATABASE "scheduleease_test" ENCODING = 'unicode'[0m
+  [1m[35mSQL (1.7ms)[0m  [1m[35mCREATE EXTENSION IF NOT EXISTS "plpgsql"[0m
+  [1m[35m (0.2ms)[0m  [1m[35mDROP TABLE IF EXISTS "appointments" CASCADE[0m
+  [1m[35m (11.0ms)[0m  [1m[35mCREATE TABLE "appointments" ("id" bigserial primary key, "provider_id" bigint NOT NULL, "client_id" bigint NOT NULL, "start_time" timestamp(6) NOT NULL, "end_time" timestamp(6) NOT NULL, "status" integer DEFAULT 0 NOT NULL, "notes" text, "cancellation_reason" text, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL)[0m
+  [1m[35m (1.4ms)[0m  [1m[35mCREATE INDEX "index_appointments_on_client_id_and_start_time" ON "appointments" ("client_id", "start_time")[0m
+  [1m[35m (1.1ms)[0m  [1m[35mCREATE INDEX "index_appointments_on_client_id" ON "appointments" ("client_id")[0m
+  [1m[35m (1.9ms)[0m  [1m[35mCREATE INDEX "index_appointments_on_end_time" ON "appointments" ("end_time")[0m
+  [1m[35m (1.0ms)[0m  [1m[35mCREATE INDEX "index_appointments_on_provider_id_and_start_time" ON "appointments" ("provider_id", "start_time")[0m
+  [1m[35m (0.9ms)[0m  [1m[35mCREATE INDEX "index_appointments_on_provider_id" ON "appointments" ("provider_id")[0m
+  [1m[35m (1.0ms)[0m  [1m[35mCREATE INDEX "index_appointments_on_start_time" ON "appointments" ("start_time")[0m
+  [1m[35m (1.5ms)[0m  [1m[35mCREATE INDEX "index_appointments_on_status" ON "appointments" ("status")[0m
+  [1m[35m (0.1ms)[0m  [1m[35mDROP TABLE IF EXISTS "availability_slots" CASCADE[0m
+  [1m[35m (2.3ms)[0m  [1m[35mCREATE TABLE "availability_slots" ("id" bigserial primary key, "user_id" bigint NOT NULL, "start_time" timestamp(6) NOT NULL, "end_time" timestamp(6) NOT NULL, "recurring" boolean DEFAULT FALSE NOT NULL, "notes" text, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL)[0m
+  [1m[35m (1.9ms)[0m  [1m[35mCREATE INDEX "index_availability_slots_on_end_time" ON "availability_slots" ("end_time")[0m
+  [1m[35m (0.7ms)[0m  [1m[35mCREATE INDEX "index_availability_slots_on_recurring" ON "availability_slots" ("recurring")[0m
+  [1m[35m (0.8ms)[0m  [1m[35mCREATE INDEX "index_availability_slots_on_start_time" ON "availability_slots" ("start_time")[0m
+  [1m[35m (0.8ms)[0m  [1m[35mCREATE INDEX "index_availability_slots_on_user_id_and_start_time" ON "availability_slots" ("user_id", "start_time")[0m
+  [1m[35m (1.3ms)[0m  [1m[35mCREATE INDEX "index_availability_slots_on_user_id" ON "availability_slots" ("user_id")[0m
+  [1m[35m (0.2ms)[0m  [1m[35mDROP TABLE IF EXISTS "notifications" CASCADE[0m
+  [1m[35m (3.4ms)[0m  [1m[35mCREATE TABLE "notifications" ("id" bigserial primary key, "appointment_id" bigint NOT NULL, "user_id" bigint NOT NULL, "message" text NOT NULL, "notification_type" integer DEFAULT 0 NOT NULL, "status" integer DEFAULT 0 NOT NULL, "sent_at" timestamp(6), "retry_count" integer DEFAULT 0 NOT NULL, "error_message" text, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL)[0m
+  [1m[35m (0.8ms)[0m  [1m[35mCREATE INDEX "index_notifications_on_appointment_id" ON "notifications" ("appointment_id")[0m
+  [1m[35m (1.2ms)[0m  [1m[35mCREATE INDEX "index_notifications_on_notification_type" ON "notifications" ("notification_type")[0m
+  [1m[35m (0.6ms)[0m  [1m[35mCREATE INDEX "index_notifications_on_sent_at" ON "notifications" ("sent_at")[0m
+  [1m[35m (0.7ms)[0m  [1m[35mCREATE INDEX "index_notifications_on_status" ON "notifications" ("status")[0m
+  [1m[35m (1.0ms)[0m  [1m[35mCREATE INDEX "index_notifications_on_user_id_and_status" ON "notifications" ("user_id", "status")[0m
+  [1m[35m (0.9ms)[0m  [1m[35mCREATE INDEX "index_notifications_on_user_id" ON "notifications" ("user_id")[0m
+  [1m[35m (0.2ms)[0m  [1m[35mDROP TABLE IF EXISTS "users" CASCADE[0m
+  [1m[35m (4.8ms)[0m  [1m[35mCREATE TABLE "users" ("id" bigserial primary key, "email" character varying DEFAULT '' NOT NULL, "encrypted_password" character varying DEFAULT '' NOT NULL, "reset_password_token" character varying, "reset_password_sent_at" timestamp(6), "remember_created_at" timestamp(6), "name" character varying NOT NULL, "role" integer DEFAULT 0 NOT NULL, "timezone" character varying DEFAULT 'UTC' NOT NULL, "phone_number" character varying, "provider_id" character varying, "uid" character varying, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL)[0m
+  [1m[35m (1.2ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_users_on_email" ON "users" ("email")[0m
+  [1m[35m (0.9ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_users_on_provider_id_and_uid" ON "users" ("provider_id", "uid")[0m
+  [1m[35m (0.9ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_users_on_reset_password_token" ON "users" ("reset_password_token")[0m
+  [1m[35m (1.0ms)[0m  [1m[35mCREATE INDEX "index_users_on_role" ON "users" ("role")[0m
+  [1m[35m (2.1ms)[0m  [1m[35mALTER TABLE "appointments" ADD CONSTRAINT "fk_rails_6497fe64e8"
+FOREIGN KEY ("client_id")
+  REFERENCES "users" ("id")
+[0m
+  [1m[35m (0.5ms)[0m  [1m[35mALTER TABLE "appointments" ADD CONSTRAINT "fk_rails_9563bcd74d"
+FOREIGN KEY ("provider_id")
+  REFERENCES "users" ("id")
+[0m
+  [1m[35m (0.7ms)[0m  [1m[35mALTER TABLE "availability_slots" ADD CONSTRAINT "fk_rails_10a7c3b986"
+FOREIGN KEY ("user_id")
+  REFERENCES "users" ("id")
+[0m
+  [1m[35m (0.5ms)[0m  [1m[35mALTER TABLE "notifications" ADD CONSTRAINT "fk_rails_9d113f9d4b"
+FOREIGN KEY ("appointment_id")
+  REFERENCES "appointments" ("id")
+[0m
+  [1m[35m (0.8ms)[0m  [1m[35mALTER TABLE "notifications" ADD CONSTRAINT "fk_rails_b080fb4855"
+FOREIGN KEY ("user_id")
+  REFERENCES "users" ("id")
+[0m
+  [1m[35m (2.8ms)[0m  [1m[35mCREATE TABLE "schema_migrations" ("version" character varying NOT NULL PRIMARY KEY)[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.5ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+  [1m[35m (0.5ms)[0m  [1m[32mINSERT INTO "schema_migrations" (version) VALUES (4)[0m
+  [1m[35m (0.2ms)[0m  [1m[32mINSERT INTO "schema_migrations" (version) VALUES
+(3),
+(2),
+(1);[0m
+  [1m[35m (2.6ms)[0m  [1m[35mCREATE TABLE "ar_internal_metadata" ("key" character varying NOT NULL PRIMARY KEY, "value" character varying, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL)[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.5ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = $1 ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "environment"]]
+  [1m[36mActiveRecord::InternalMetadata Create (0.6ms)[0m  [1m[32mINSERT INTO "ar_internal_metadata" ("key", "value", "created_at", "updated_at") VALUES ('environment', 'test', '2025-06-14 01:24:21.383485', '2025-06-14 01:24:21.383488') RETURNING "key"[0m
+  [1m[36mActiveRecord::InternalMetadata Load (0.2ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = $1 ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "environment"]]
+  [1m[36mActiveRecord::InternalMetadata Load (0.1ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = $1 ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1[0m  [[nil, "schema_sha1"]]
+  [1m[36mActiveRecord::InternalMetadata Create (0.2ms)[0m  [1m[32mINSERT INTO "ar_internal_metadata" ("key", "value", "created_at", "updated_at") VALUES ('schema_sha1', 'd47ff04eecbefd309b590ce977b3184cffb89ccb', '2025-06-14 01:24:21.384908', '2025-06-14 01:24:21.384909') RETURNING "key"[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.8ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC[0m
+[dotenv] Saved a snapshot of [32mENV[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[35m (0.4ms)[0m  [1m[35mALTER TABLE "availability_slots" DISABLE TRIGGER ALL;ALTER TABLE "notifications" DISABLE TRIGGER ALL;ALTER TABLE "users" DISABLE TRIGGER ALL;ALTER TABLE "appointments" DISABLE TRIGGER ALL;ALTER TABLE "schema_migrations" DISABLE TRIGGER ALL;ALTER TABLE "ar_internal_metadata" DISABLE TRIGGER ALL[0m
+  [1m[36mTRANSACTION (0.4ms)[0m  [1m[35mCOMMIT[0m
+  [1m[35m (1.4ms)[0m  [1m[34m            SELECT schemaname || '.' || tablename
+            FROM pg_tables
+            WHERE
+              tablename !~ '_prt_' AND
+              tablename <> 'schema_migrations'
+  AND tablename <> 'ar_internal_metadata'
+ AND
+              schemaname = ANY (current_schemas(false))
+[0m
+  [1m[35m (0.8ms)[0m  [1m[34mselect table_name from information_schema.views where table_schema = 'scheduleease_test'[0m
+  [1m[35m (49.0ms)[0m  [1m[35mTRUNCATE TABLE "availability_slots", "notifications", "users", "appointments" RESTART IDENTITY restrict;[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[35m (0.7ms)[0m  [1m[35mALTER TABLE "availability_slots" ENABLE TRIGGER ALL;ALTER TABLE "schema_migrations" ENABLE TRIGGER ALL;ALTER TABLE "ar_internal_metadata" ENABLE TRIGGER ALL;ALTER TABLE "users" ENABLE TRIGGER ALL;ALTER TABLE "appointments" ENABLE TRIGGER ALL;ALTER TABLE "notifications" ENABLE TRIGGER ALL[0m
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mCOMMIT[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (0.6ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE "users"."email" = $1 LIMIT $2[0m  [["email", "test@example.com"], ["LIMIT", 1]]
+  [1m[36mUser Exists? (0.2ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE "users"."email" = $1 LIMIT $2[0m  [["email", "test@example.com"], ["LIMIT", 1]]
+  [1m[36mTRANSACTION (0.4ms)[0m  [1m[31mROLLBACK TO SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mTRANSACTION (0.4ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (0.3ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE "users"."email" = $1 LIMIT $2[0m  [["email", ""], ["LIMIT", 1]]
+  [1m[36mTRANSACTION (1.4ms)[0m  [1m[31mROLLBACK TO SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (0.4ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mTRANSACTION (0.4ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (1.5ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE "users"."email" = $1 LIMIT $2[0m  [["email", "test@example.com"], ["LIMIT", 1]]
+  [1m[36mUser Exists? (0.3ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE "users"."email" = $1 LIMIT $2[0m  [["email", "test@example.com"], ["LIMIT", 1]]
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[31mROLLBACK TO SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mTRANSACTION (0.7ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[31mROLLBACK TO SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (0.8ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[31mROLLBACK TO SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[31mROLLBACK[0m
