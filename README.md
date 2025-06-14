@@ -70,7 +70,3 @@ API documentation is available at http://localhost:3002/api-docs when running in
 3. Make your changes
 4. Add tests
 5. Submit a pull request
-
-## License
-
-MIT License - see LICENSE file for details. 
