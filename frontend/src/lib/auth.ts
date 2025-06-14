@@ -54,13 +54,8 @@ export const authApi = {
       },
     });
 
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new AuthError(result.message || 'Failed to get user', response.status);
-    }
-
-    return result.user;
+    const data = await response.json();
+    return data.data.attributes;
   },
 
   async logout(token: string): Promise<void> {
