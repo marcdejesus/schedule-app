@@ -1,4 +1,7 @@
 class Api::V1::SessionsController < ApplicationController
+  # Skip authentication for public endpoints
+  skip_before_action :authenticate_user_from_token!, only: [:create]
+
   # GET /api/v1/sessions
   def index
     render json: {
@@ -27,8 +30,8 @@ class Api::V1::SessionsController < ApplicationController
       #   return
       # end
 
-      # Generate JWT token via devise-jwt
-      token = Warden::JWTAuth::UserEncoder.new.call(user, :user, nil).first
+      # Generate JWT token using the same method as the authentication concern
+      token = generate_jwt_token(user)
       
       # Update sign in tracking
       user.update!(
@@ -133,8 +136,9 @@ class Api::V1::SessionsController < ApplicationController
     payload = {
       user_id: user.id,
       email: user.email,
+      role: user.role,
       exp: 24.hours.from_now.to_i
     }
-    JWT.encode(payload, Rails.application.secrets.secret_key_base)
+    JWT.encode(payload, Rails.application.credentials.secret_key_base || 'fallback_secret_for_development', 'HS256')
   end
 end 
