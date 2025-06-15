@@ -8,14 +8,14 @@ class Api::V1::AppointmentsController < ApplicationController
     # Apply filtering
     appointments = filter_appointments(appointments)
 
-    render json: AppointmentSerializer.new(appointments).serialized_json
+    render json: AppointmentSerializer.new(appointments).serializable_hash
   end
 
   # GET /api/v1/appointments/:id
   def show
     return unauthorized unless can_view_appointment?
     
-    render json: AppointmentSerializer.new(@appointment).serialized_json
+    render json: AppointmentSerializer.new(@appointment).serializable_hash
   end
 
   # POST /api/v1/appointments
@@ -24,7 +24,7 @@ class Api::V1::AppointmentsController < ApplicationController
     @appointment.client = current_user if current_user.client?
 
     if @appointment.save
-      render json: AppointmentSerializer.new(@appointment).serialized_json, 
+      render json: AppointmentSerializer.new(@appointment).serializable_hash, 
              status: :created
     else
       render json: {
@@ -39,7 +39,7 @@ class Api::V1::AppointmentsController < ApplicationController
     return unauthorized unless can_modify_appointment?
 
     if @appointment.update(appointment_update_params)
-      render json: AppointmentSerializer.new(@appointment).serialized_json
+      render json: AppointmentSerializer.new(@appointment).serializable_hash
     else
       render json: {
         error: 'Update failed',
@@ -65,7 +65,7 @@ class Api::V1::AppointmentsController < ApplicationController
     cancellation_reason = params[:cancellation_reason]
     
     if @appointment.update(status: :cancelled, cancellation_reason: cancellation_reason)
-      render json: AppointmentSerializer.new(@appointment).serialized_json
+      render json: AppointmentSerializer.new(@appointment).serializable_hash
     else
       render json: {
         error: 'Cancellation failed',
@@ -79,7 +79,7 @@ class Api::V1::AppointmentsController < ApplicationController
     return unauthorized unless can_confirm_appointment?
 
     if @appointment.update(status: :confirmed)
-      render json: AppointmentSerializer.new(@appointment).serialized_json
+      render json: AppointmentSerializer.new(@appointment).serializable_hash
     else
       render json: {
         error: 'Confirmation failed',
@@ -91,13 +91,13 @@ class Api::V1::AppointmentsController < ApplicationController
   # GET /api/v1/appointments/upcoming
   def upcoming
     appointments = current_user.appointments.upcoming.includes(:provider, :client)
-    render json: AppointmentSerializer.new(appointments).serialized_json
+    render json: AppointmentSerializer.new(appointments).serializable_hash
   end
 
   # GET /api/v1/appointments/past
   def past
     appointments = current_user.appointments.past.includes(:provider, :client)
-    render json: AppointmentSerializer.new(appointments).serialized_json
+    render json: AppointmentSerializer.new(appointments).serializable_hash
   end
 
   private
