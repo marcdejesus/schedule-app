@@ -152,6 +152,29 @@ export const authApi = {
     return result;
   },
 
+  async changePassword(currentPassword: string, newPassword: string, passwordConfirmation: string, token: string): Promise<{ message: string }> {
+    const response = await fetch('/api/v1/auth/password/change', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        current_password: currentPassword,
+        password: newPassword,
+        password_confirmation: passwordConfirmation,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new AuthError(result.message || 'Password change failed', response.status);
+    }
+
+    return result;
+  },
+
   async resendEmailConfirmation(email: string): Promise<{ message: string }> {
     const response = await fetch(`${API_BASE_URL}/api/v1/auth/email/resend_confirmation`, {
       method: 'POST',

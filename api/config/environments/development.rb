@@ -10,6 +10,10 @@ Rails.application.configure do
 
   # Do not eager load code on boot.
   config.eager_load = false
+  
+  # Allow requests from Docker network
+  config.hosts << "api"
+  config.hosts << "api:3001"
 
   # Show full error reports.
   config.consider_all_requests_local = true

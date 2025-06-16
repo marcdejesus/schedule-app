@@ -3,6 +3,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { Layout } from '@/components/layout/Layout';
 import { useAuth } from '@/hooks/useAuth';
+import { authApi, AuthError } from '@/lib/auth';
 import { ArrowLeftIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 export default function ChangePasswordPage() {
@@ -83,33 +84,31 @@ export default function ChangePasswordPage() {
     setSuccess('');
 
     try {
-      const response = await fetch('/api/v1/auth/password/change', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          current_password: formData.currentPassword,
-          password: formData.newPassword,
-          password_confirmation: formData.confirmPassword
-        })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setSuccess('Password changed successfully!');
-        setFormData({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: ''
-        });
-      } else {
-        setError(data.message || 'Failed to change password');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Authentication token not found. Please log in again.');
+        return;
       }
+
+      const result = await authApi.changePassword(
+        formData.currentPassword,
+        formData.newPassword,
+        formData.confirmPassword,
+        token
+      );
+
+      setSuccess('Password changed successfully!');
+      setFormData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
     } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
+      if (err instanceof AuthError) {
+        setError(err.message);
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }

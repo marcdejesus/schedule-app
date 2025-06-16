@@ -1,5 +1,5 @@
 class Api::V1::Auth::PasswordsController < ApplicationController
-  skip_before_action :authenticate_user!, except: [:change]
+  skip_before_action :authenticate_user_from_token!, except: [:change]
 
   # POST /api/v1/auth/password/reset
   def create
@@ -96,8 +96,8 @@ class Api::V1::Auth::PasswordsController < ApplicationController
     end
 
     if user.update(password: params[:password], password_confirmation: params[:password_confirmation])
-      # Send password changed notification
-      PasswordChangedJob.perform_later(user.id)
+      # Send password changed notification (temporarily disabled)
+      # PasswordChangedJob.perform_later(user.id)
       
       render json: {
         message: 'Password changed successfully',
