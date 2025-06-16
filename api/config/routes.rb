@@ -24,6 +24,12 @@ Rails.application.routes.draw do
         collection do
           get :me
         end
+        member do
+          post :avatar, action: :upload_avatar
+          delete :avatar, action: :remove_avatar
+          get :preferences
+          patch :preferences, action: :update_preferences
+        end
       end
 
       # Provider routes

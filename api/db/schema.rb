@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_06_14_010101) do
+ActiveRecord::Schema[7.1].define(version: 2025_06_16_141041) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -67,6 +67,24 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_14_010101) do
     t.index ["user_id"], name: "index_notifications_on_user_id"
   end
 
+  create_table "user_preferences", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.boolean "email_notifications", default: true
+    t.boolean "appointment_reminders", default: true
+    t.boolean "booking_confirmations", default: true
+    t.string "notification_frequency", default: "immediate"
+    t.string "theme", default: "system"
+    t.string "font_size", default: "medium"
+    t.boolean "high_contrast", default: false
+    t.boolean "reduced_motion", default: false
+    t.boolean "screen_reader", default: false
+    t.string "language", default: "en"
+    t.string "date_format", default: "MM/DD/YYYY"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_user_preferences_on_user_id", unique: true
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -90,7 +108,14 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_14_010101) do
     t.datetime "last_sign_in_at"
     t.string "current_sign_in_ip"
     t.string "last_sign_in_ip"
+    t.text "bio"
+    t.string "avatar_url"
+    t.text "specialties"
+    t.text "social_links"
+    t.string "custom_booking_slug"
+    t.index ["avatar_url"], name: "index_users_on_avatar_url", where: "(avatar_url IS NOT NULL)"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
+    t.index ["custom_booking_slug"], name: "index_users_on_custom_booking_slug", unique: true, where: "(custom_booking_slug IS NOT NULL)"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["provider_id", "uid"], name: "index_users_on_provider_id_and_uid", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
@@ -102,4 +127,5 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_14_010101) do
   add_foreign_key "availability_slots", "users"
   add_foreign_key "notifications", "appointments"
   add_foreign_key "notifications", "users"
+  add_foreign_key "user_preferences", "users"
 end

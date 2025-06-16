@@ -15,17 +15,26 @@ class User < ApplicationRecord
   has_many :client_appointments, class_name: 'Appointment', foreign_key: 'client_id', dependent: :destroy
   has_many :notifications, through: :provider_appointments
   has_many :notifications, through: :client_appointments
+  has_one :user_preference, dependent: :destroy
+
+  # Profile associations and attachments
+  has_one_attached :avatar
 
   # Validations
   validates :name, presence: true
   validates :email, presence: true, uniqueness: true
   validates :timezone, presence: true
   validates :role, presence: true
+  validates :custom_booking_slug, uniqueness: true, allow_nil: true, 
+            format: { with: /\A[a-z0-9\-_]+\z/, message: "can only contain lowercase letters, numbers, hyphens, and underscores" },
+            length: { minimum: 3, maximum: 50 }
 
   # Callbacks
   before_validation :set_default_role, on: :create
   before_validation :set_default_timezone, on: :create
+  before_validation :sanitize_custom_booking_slug
   after_create :auto_confirm_user
+  after_create :create_user_preferences
   # Temporarily disabled: after_create :send_welcome_notification
 
   # Scopes
@@ -33,6 +42,8 @@ class User < ApplicationRecord
   scope :clients, -> { where(role: :client) }
   scope :confirmed, -> { where.not(confirmed_at: nil) }
   scope :unconfirmed, -> { where(confirmed_at: nil) }
+  scope :with_specialties, -> { where.not(specialties: [nil, '']) }
+  scope :with_custom_slug, -> { where.not(custom_booking_slug: nil) }
 
   # Class methods
   def self.from_omniauth(auth)
@@ -44,6 +55,11 @@ class User < ApplicationRecord
       user.uid = auth.uid
       user.confirmed_at = Time.current # Auto-confirm OAuth users
     end
+  end
+
+  def self.find_by_booking_identifier(identifier)
+    # Try to find by custom slug first, then by ID
+    find_by(custom_booking_slug: identifier) || find_by(id: identifier)
   end
 
   # Instance methods
@@ -83,6 +99,57 @@ class User < ApplicationRecord
     remember_created_at.present? && remember_created_at > 30.days.ago
   end
 
+  # Profile methods
+  def specialties_array
+    return [] if specialties.blank?
+    JSON.parse(specialties)
+  rescue JSON::ParserError
+    specialties.to_s.split(',').map(&:strip)
+  end
+
+  def specialties_array=(array)
+    self.specialties = array.is_a?(Array) ? array.to_json : array.to_s
+  end
+
+  def social_links_hash
+    return {} if social_links.blank?
+    JSON.parse(social_links)
+  rescue JSON::ParserError
+    {}
+  end
+
+  def social_links_hash=(hash)
+    self.social_links = hash.is_a?(Hash) ? hash.to_json : hash.to_s
+  end
+
+  def booking_url_slug
+    custom_booking_slug.presence || id.to_s
+  end
+
+  def public_booking_url(base_url = nil)
+    base_url ||= Rails.application.routes.default_url_options[:host] || 'localhost:3000'
+    "#{base_url}/book/#{booking_url_slug}"
+  end
+
+  def has_complete_profile?
+    name.present? && bio.present? && (provider? ? specialties_array.any? : true)
+  end
+
+  def preferences
+    user_preference || build_user_preference
+  end
+
+  def avatar_url_or_default
+    if avatar.attached?
+      Rails.application.routes.url_helpers.rails_blob_url(avatar, only_path: true)
+    elsif avatar_url.present?
+      avatar_url
+    else
+      # Return a default avatar URL or gravatar
+      gravatar_url
+    end
+  end
+
   private
 
   def set_default_role
@@ -93,13 +160,28 @@ class User < ApplicationRecord
     self.timezone ||= 'UTC'
   end
 
+  def sanitize_custom_booking_slug
+    return if custom_booking_slug.blank?
+    self.custom_booking_slug = custom_booking_slug.downcase.strip
+  end
+
   def auto_confirm_user
     # Auto-confirm users to avoid email issues during development
     self.update_column(:confirmed_at, Time.current) if confirmed_at.nil?
   end
 
+  def create_user_preferences
+    # Create default user preferences
+    self.create_user_preference! unless user_preference.present?
+  end
+
   def send_welcome_notification
     # Send welcome email after user creation
     UserMailer.welcome_email(self).deliver_later if persisted?
+  end
+
+  def gravatar_url
+    hash = Digest::MD5.hexdigest(email.downcase)
+    "https://www.gravatar.com/avatar/#{hash}?d=identicon"
   end
 end 

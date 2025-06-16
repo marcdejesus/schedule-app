@@ -13,6 +13,16 @@ export interface User {
   timezone?: string;
   bio?: string;
   years_of_experience?: number;
+  
+  // New profile fields
+  avatar_url?: string;
+  avatar_url_full?: string;
+  custom_booking_slug?: string;
+  social_links?: string;
+  social_links_parsed?: Record<string, string>;
+  booking_url_slug?: string;
+  public_booking_url?: string;
+  has_complete_profile?: boolean;
 }
 
 export interface AuthResponse {
@@ -43,6 +53,7 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isInitialized: boolean;
   revalidate: () => Promise<User | null>;
+  updateUser: () => Promise<User | null>;
   handleOAuthCallback: (token: string, signupData?: { role?: string }) => Promise<User>;
 }
 

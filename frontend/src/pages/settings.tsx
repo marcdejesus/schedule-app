@@ -1,17 +1,165 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { Layout } from '@/components/layout/Layout';
 import { useAuth } from '@/hooks/useAuth';
+import { useAccessibility } from '@/hooks/useAccessibility';
+import { AvatarUpload } from '@/components/profile/AvatarUpload';
+import { SpecialtiesManager } from '@/components/profile/SpecialtiesManager';
+import { AccessibilityPanel } from '@/components/profile/AccessibilityPanel';
 import { 
   Cog6ToothIcon,
   BellIcon,
   GlobeAltIcon,
   ShieldCheckIcon,
-  UserIcon
+  UserIcon,
+  LinkIcon,
+  EyeIcon
 } from '@heroicons/react/24/outline';
 
+interface UserProfile {
+  name: string;
+  email: string;
+  bio: string;
+  specialties: string[];
+  social_links: Record<string, string>;
+  custom_booking_slug: string;
+  avatar_url: string;
+}
+
+interface NotificationPreferences {
+  email_notifications: boolean;
+  appointment_reminders: boolean;
+  booking_confirmations: boolean;
+  notification_frequency: 'immediate' | 'daily' | 'weekly';
+}
+
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
+  const { preferences: accessibilityPrefs, updatePreferences: updateAccessibilityPrefs } = useAccessibility();
+  
+  const [profileData, setProfileData] = useState<UserProfile>({
+    name: user?.name || '',
+    email: user?.email || '',
+    bio: user?.bio || '',
+    specialties: user?.specialties || [],
+    social_links: user?.social_links_parsed || {},
+    custom_booking_slug: user?.custom_booking_slug || '',
+    avatar_url: user?.avatar_url_full || ''
+  });
+
+  const [notificationPrefs, setNotificationPrefs] = useState<NotificationPreferences>({
+    email_notifications: true,
+    appointment_reminders: true,
+    booking_confirmations: true,
+    notification_frequency: 'immediate'
+  });
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('profile');
+
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        name: user.name || '',
+        email: user.email || '',
+        bio: user.bio || '',
+        specialties: user.specialties || [],
+        social_links: user.social_links_parsed || {},
+        custom_booking_slug: user.custom_booking_slug || '',
+        avatar_url: user.avatar_url_full || ''
+      });
+    }
+  }, [user]);
+
+  const handleProfileUpdate = async (updates: Partial<UserProfile>) => {
+    if (!user) return;
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/v1/users/${user.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          user: {
+            ...updates,
+            social_links: updates.social_links
+          }
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setProfileData(prev => ({ ...prev, ...updates }));
+        // Update user context
+        await updateUser();
+      } else {
+        throw new Error('Failed to update profile');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('Failed to update profile. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAvatarUpload = async (file: File) => {
+    if (!user) return;
+
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    try {
+      const response = await fetch(`/api/v1/users/${user.id}/avatar`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: formData
+      });
+
+      if (response.ok) {
+        await updateUser();
+      } else {
+        throw new Error('Failed to upload avatar');
+      }
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      throw error;
+    }
+  };
+
+  const handleAvatarRemove = async () => {
+    if (!user) return;
+
+    try {
+      const response = await fetch(`/api/v1/users/${user.id}/avatar`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (response.ok) {
+        await updateUser();
+      } else {
+        throw new Error('Failed to remove avatar');
+      }
+    } catch (error) {
+      console.error('Error removing avatar:', error);
+      throw error;
+    }
+  };
+
+  const tabs = [
+    { id: 'profile', name: 'Profile', icon: UserIcon },
+    { id: 'notifications', name: 'Notifications', icon: BellIcon },
+    { id: 'accessibility', name: 'Accessibility', icon: EyeIcon },
+    { id: 'security', name: 'Security', icon: ShieldCheckIcon }
+  ];
 
   return (
     <>
@@ -21,255 +169,251 @@ export default function SettingsPage() {
       </Head>
 
       <Layout>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Skip Link for Accessibility */}
+        <a 
+          href="#main-content" 
+          className="skip-link"
+          tabIndex={0}
+        >
+          Skip to main content
+        </a>
+
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
             <p className="mt-2 text-gray-600">
-              Manage your account settings and preferences
+              Manage your account settings, preferences, and accessibility options
             </p>
           </div>
 
-          {/* Settings Sections */}
-          <div className="space-y-6">
-            {/* Profile Settings */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <div className="flex items-center">
-                  <UserIcon className="h-5 w-5 text-gray-400 mr-3" />
-                  <h2 className="text-lg font-medium text-gray-900">Profile Settings</h2>
-                </div>
-              </div>
-              <div className="px-6 py-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Display Name
-                    </label>
-                    <input
-                      type="text"
-                      defaultValue={user?.name}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Enter your display name"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email Address
-                    </label>
-                    <input
-                      type="email"
-                      defaultValue={user?.email}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Enter your email address"
-                    />
-                  </div>
-                </div>
-                <div className="mt-6">
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium">
-                    Save Profile Changes
-                  </button>
-                </div>
-              </div>
-            </div>
+          {/* Tab Navigation */}
+          <div className="border-b border-gray-200 mb-8">
+            <nav className="-mb-px flex space-x-8" aria-label="Settings navigation">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                    activeTab === tab.id
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                  aria-selected={activeTab === tab.id}
+                  role="tab"
+                >
+                  <tab.icon className="w-5 h-5 inline mr-2" aria-hidden="true" />
+                  {tab.name}
+                </button>
+              ))}
+            </nav>
+          </div>
 
-            {/* Notification Settings */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <div className="flex items-center">
-                  <BellIcon className="h-5 w-5 text-gray-400 mr-3" />
-                  <h2 className="text-lg font-medium text-gray-900">Notification Preferences</h2>
+          {/* Tab Content */}
+          <main id="main-content" role="main">
+            {/* Profile Tab */}
+            {activeTab === 'profile' && (
+              <div className="space-y-8">
+                {/* Avatar Section */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <h2 className="text-lg font-medium text-gray-900 mb-6">Profile Picture</h2>
+                  <AvatarUpload
+                    currentAvatarUrl={profileData.avatar_url}
+                    onUpload={handleAvatarUpload}
+                    onRemove={handleAvatarRemove}
+                    isLoading={isLoading}
+                  />
                 </div>
-              </div>
-              <div className="px-6 py-4">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">Email Notifications</h3>
-                      <p className="text-sm text-gray-600">Receive email notifications for appointments</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" defaultChecked className="sr-only peer" />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">Appointment Reminders</h3>
-                      <p className="text-sm text-gray-600">Get reminded about upcoming appointments</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" defaultChecked className="sr-only peer" />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">Booking Confirmations</h3>
-                      <p className="text-sm text-gray-600">Receive confirmations when appointments are booked</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" defaultChecked className="sr-only peer" />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-                </div>
-                <div className="mt-6">
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium">
-                    Save Notification Settings
-                  </button>
-                </div>
-              </div>
-            </div>
 
-            {/* Timezone Settings */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <div className="flex items-center">
-                  <GlobeAltIcon className="h-5 w-5 text-gray-400 mr-3" />
-                  <h2 className="text-lg font-medium text-gray-900">Timezone & Localization</h2>
-                </div>
-              </div>
-              <div className="px-6 py-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Timezone
-                    </label>
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                      <option value="America/New_York">Eastern Time (ET)</option>
-                      <option value="America/Chicago">Central Time (CT)</option>
-                      <option value="America/Denver">Mountain Time (MT)</option>
-                      <option value="America/Los_Angeles">Pacific Time (PT)</option>
-                      <option value="UTC">UTC</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Date Format
-                    </label>
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                      <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-                      <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-                      <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="mt-6">
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium">
-                    Save Timezone Settings
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Security Settings */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <div className="flex items-center">
-                  <ShieldCheckIcon className="h-5 w-5 text-gray-400 mr-3" />
-                  <h2 className="text-lg font-medium text-gray-900">Security</h2>
-                </div>
-              </div>
-              <div className="px-6 py-4">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                {/* Basic Information */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <h2 className="text-lg font-medium text-gray-900 mb-6">Basic Information</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <h3 className="text-sm font-medium text-gray-900">Change Password</h3>
-                      <p className="text-sm text-gray-600">Update your account password</p>
-                    </div>
-                    <button className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                      Change Password
-                    </button>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">Two-Factor Authentication</h3>
-                      <p className="text-sm text-gray-600">Add an extra layer of security to your account</p>
-                    </div>
-                    <button className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                      Enable 2FA
-                    </button>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">Active Sessions</h3>
-                      <p className="text-sm text-gray-600">Manage your active login sessions</p>
-                    </div>
-                    <button className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                      View Sessions
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Provider-specific Settings */}
-            {user?.role === 'provider' && (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <div className="flex items-center">
-                    <Cog6ToothIcon className="h-5 w-5 text-gray-400 mr-3" />
-                    <h2 className="text-lg font-medium text-gray-900">Provider Settings</h2>
-                  </div>
-                </div>
-                <div className="px-6 py-4">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-900">Auto-confirm Bookings</h3>
-                        <p className="text-sm text-gray-600">Automatically confirm new bookings without manual approval</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                        Display Name
                       </label>
+                      <input
+                        id="name"
+                        type="text"
+                        value={profileData.name}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
+                        onBlur={() => handleProfileUpdate({ name: profileData.name })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Enter your display name"
+                        aria-describedby="name-description"
+                      />
+                      <p id="name-description" className="text-sm text-gray-500 mt-1">
+                        This is how your name will appear to others
+                      </p>
                     </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-900">Buffer Time</h3>
-                        <p className="text-sm text-gray-600">Add buffer time between appointments</p>
-                      </div>
-                      <select className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="0">No buffer</option>
-                        <option value="15">15 minutes</option>
-                        <option value="30">30 minutes</option>
-                        <option value="60">1 hour</option>
-                      </select>
+                    <div>
+                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                        Email Address
+                      </label>
+                      <input
+                        id="email"
+                        type="email"
+                        value={profileData.email}
+                        disabled
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
+                        aria-describedby="email-description"
+                      />
+                      <p id="email-description" className="text-sm text-gray-500 mt-1">
+                        Email cannot be changed from this page
+                      </p>
                     </div>
                   </div>
+
                   <div className="mt-6">
-                    <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium">
-                      Save Provider Settings
-                    </button>
+                    <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-2">
+                      Bio
+                    </label>
+                    <textarea
+                      id="bio"
+                      rows={4}
+                      value={profileData.bio}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
+                      onBlur={() => handleProfileUpdate({ bio: profileData.bio })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Tell others about yourself..."
+                      aria-describedby="bio-description"
+                    />
+                    <p id="bio-description" className="text-sm text-gray-500 mt-1">
+                      A brief description that will be visible on your public profile
+                    </p>
+                  </div>
+                </div>
+
+                {/* Specialties (Provider only) */}
+                {user?.role === 'provider' && (
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h2 className="text-lg font-medium text-gray-900 mb-6">Professional Specialties</h2>
+                    <SpecialtiesManager
+                      specialties={profileData.specialties}
+                      onChange={(specialties) => {
+                        setProfileData(prev => ({ ...prev, specialties }));
+                        handleProfileUpdate({ specialties });
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Custom Booking URL */}
+                {user?.role === 'provider' && (
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h2 className="text-lg font-medium text-gray-900 mb-6">Custom Booking URL</h2>
+                    <div className="space-y-4">
+                      <div>
+                        <label htmlFor="booking-slug" className="block text-sm font-medium text-gray-700 mb-2">
+                          Custom URL Slug
+                        </label>
+                        <div className="flex rounded-md shadow-sm">
+                          <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                            scheduleease.com/book/
+                          </span>
+                          <input
+                            id="booking-slug"
+                            type="text"
+                            value={profileData.custom_booking_slug}
+                            onChange={(e) => setProfileData(prev => ({ ...prev, custom_booking_slug: e.target.value }))}
+                            onBlur={() => handleProfileUpdate({ custom_booking_slug: profileData.custom_booking_slug })}
+                            className="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="your-name"
+                            pattern="[a-z0-9\-_]+"
+                            aria-describedby="booking-slug-description"
+                          />
+                        </div>
+                        <p id="booking-slug-description" className="text-sm text-gray-500 mt-1">
+                          Only lowercase letters, numbers, hyphens, and underscores allowed. Minimum 3 characters.
+                        </p>
+                      </div>
+                      {profileData.custom_booking_slug && (
+                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                          <p className="text-sm text-blue-800">
+                            Your booking page will be available at:{' '}
+                            <a 
+                              href={`/book/${profileData.custom_booking_slug}`}
+                              className="font-medium underline hover:no-underline"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              scheduleease.com/book/{profileData.custom_booking_slug}
+                            </a>
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Social Links */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <h2 className="text-lg font-medium text-gray-900 mb-6">Social Links</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {['linkedin', 'website', 'twitter', 'instagram'].map((platform) => (
+                      <div key={platform}>
+                        <label htmlFor={platform} className="block text-sm font-medium text-gray-700 mb-2 capitalize">
+                          {platform === 'website' ? 'Website' : platform}
+                        </label>
+                        <input
+                          id={platform}
+                          type="url"
+                          value={profileData.social_links[platform] || ''}
+                          onChange={(e) => {
+                            const newSocialLinks = { ...profileData.social_links, [platform]: e.target.value };
+                            setProfileData(prev => ({ ...prev, social_links: newSocialLinks }));
+                          }}
+                          onBlur={() => handleProfileUpdate({ social_links: profileData.social_links })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder={`https://${platform === 'website' ? 'example.com' : `${platform}.com/username`}`}
+                        />
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Danger Zone */}
-            <div className="bg-white rounded-lg shadow-sm border border-red-200">
-              <div className="px-6 py-4 border-b border-red-200">
-                <h2 className="text-lg font-medium text-red-900">Danger Zone</h2>
+            {/* Notifications Tab */}
+            {activeTab === 'notifications' && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h2 className="text-lg font-medium text-gray-900 mb-6">Notification Preferences</h2>
+                {/* Notification preferences content would go here */}
+                <p className="text-gray-600">Notification preferences integration coming soon...</p>
               </div>
-              <div className="px-6 py-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-medium text-red-900">Delete Account</h3>
-                    <p className="text-sm text-red-600">Permanently delete your account and all associated data</p>
-                  </div>
-                  <button className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium">
-                    Delete Account
-                  </button>
-                </div>
+            )}
+
+            {/* Accessibility Tab */}
+            {activeTab === 'accessibility' && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <AccessibilityPanel
+                  preferences={accessibilityPrefs}
+                  onChange={updateAccessibilityPrefs}
+                />
               </div>
-            </div>
-          </div>
+            )}
+
+            {/* Security Tab */}
+            {activeTab === 'security' && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h2 className="text-lg font-medium text-gray-900 mb-6">Security Settings</h2>
+                {/* Security settings content would go here */}
+                <p className="text-gray-600">Security settings integration coming soon...</p>
+              </div>
+            )}
+          </main>
+        </div>
+
+        {/* Accessibility Announcements Area */}
+        <div 
+          id="accessibility-announcements" 
+          className="sr-only" 
+          role="status" 
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          {/* Dynamic accessibility announcements will be inserted here */}
         </div>
       </Layout>
     </>

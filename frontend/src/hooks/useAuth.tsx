@@ -203,7 +203,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated,
     isInitialized,
     revalidate,
-    handleOAuthCallback,
+    updateUser: revalidate,
+    handleOAuthCallback
   };
 
   return (
