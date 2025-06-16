@@ -2,8 +2,9 @@ class User < ApplicationRecord
   # Include default devise modules
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable,
-         :trackable,
-         :omniauthable, omniauth_providers: [:google_oauth2]
+         :trackable, :omniauthable, :jwt_authenticatable,
+         omniauth_providers: [:google_oauth2],
+         jwt_revocation_strategy: Devise::JWT::RevocationStrategies::Null
 
   # Enums
   enum role: { client: 0, provider: 1, admin: 2 }

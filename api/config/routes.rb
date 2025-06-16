@@ -23,9 +23,11 @@ Rails.application.routes.draw do
       resources :users, only: [:show, :update, :destroy] do
         collection do
           get :me
-          get :providers
         end
       end
+
+      # Provider routes
+      resources :providers, only: [:index, :show]
 
       # Authentication routes
       resources :sessions, only: [:index, :create, :destroy] do
@@ -79,6 +81,17 @@ Rails.application.routes.draw do
         member do
           patch :mark_as_read
         end
+      end
+
+      # Public API routes (no authentication required)
+      namespace :public do
+        resources :providers, only: [:show] do
+          member do
+            get :availability
+          end
+        end
+        
+        resources :bookings, only: [:create, :show]
       end
     end
   end

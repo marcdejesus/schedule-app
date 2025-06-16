@@ -29,5 +29,4 @@ class AppointmentSerializer
 
   belongs_to :provider, serializer: UserSerializer
   belongs_to :client, serializer: UserSerializer
-  has_many :notifications
 end 

@@ -8,6 +8,6 @@ class UserSerializer
   end
 
   has_many :availability_slots, if: proc { |record| record.provider? }
-  has_many :provider_appointments, if: proc { |record| record.provider? }
-  has_many :client_appointments, if: proc { |record| record.client? }
+  has_many :provider_appointments, serializer: :appointment, if: proc { |record| record.provider? }
+  has_many :client_appointments, serializer: :appointment, if: proc { |record| record.client? }
 end 

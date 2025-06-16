@@ -13,7 +13,16 @@ class AvailabilitySlot < ApplicationRecord
   # Scopes
   scope :for_user, ->(user) { where(user: user) }
   scope :for_date, ->(date) { where(start_time: date.beginning_of_day..date.end_of_day) }
-  scope :available, -> { where.not(id: Appointment.pluck(:availability_slot_id)) }
+  scope :available, -> { 
+    # Check if slot time doesn't overlap with any existing appointments
+    where.not(id: 
+      joins("JOIN appointments ON appointments.provider_id = availability_slots.user_id")
+        .where(
+          "(availability_slots.start_time < appointments.end_time AND availability_slots.end_time > appointments.start_time)"
+        )
+        .select(:id)
+    )
+  }
   scope :recurring, -> { where(recurring: true) }
   scope :one_time, -> { where(recurring: false) }
   scope :future, -> { where('start_time > ?', Time.current) }

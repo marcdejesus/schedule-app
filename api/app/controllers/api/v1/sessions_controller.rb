@@ -1,5 +1,6 @@
 class Api::V1::SessionsController < ApplicationController
-  before_action :authenticate_user!, except: [:create, :destroy_all_sessions]
+  # Skip authentication for public endpoints
+  skip_before_action :authenticate_user_from_token!, only: [:create]
 
   # GET /api/v1/sessions
   def index
@@ -11,7 +12,7 @@ class Api::V1::SessionsController < ApplicationController
         last_sign_in_ip: current_user.last_sign_in_ip,
         sign_in_count: current_user.sign_in_count
       }
-    }
+    }, status: :unauthorized
   end
 
   # POST /api/v1/sessions
@@ -29,6 +30,9 @@ class Api::V1::SessionsController < ApplicationController
       #   return
       # end
 
+      # Generate JWT token using the same method as the authentication concern
+      token = generate_jwt_token(user)
+      
       # Update sign in tracking
       user.update!(
         sign_in_count: user.sign_in_count + 1,
@@ -38,9 +42,6 @@ class Api::V1::SessionsController < ApplicationController
         last_sign_in_ip: user.current_sign_in_ip,
         remember_created_at: params[:remember_me] ? Time.current : nil
       )
-
-      # Generate JWT token
-      token = generate_jwt_token(user)
 
       render json: {
         message: 'Signed in successfully',
@@ -66,7 +67,8 @@ class Api::V1::SessionsController < ApplicationController
   # DELETE /api/v1/sessions
   def destroy
     if current_user
-      current_user.update!(remember_created_at: nil)
+      # Sign out via devise-jwt
+      Warden::JWTAuth::TokenRevoker.new.call(request.headers['Authorization']&.split(' ')&.last)
       render json: {
         message: 'Signed out successfully'
       }, status: :ok
@@ -134,8 +136,9 @@ class Api::V1::SessionsController < ApplicationController
     payload = {
       user_id: user.id,
       email: user.email,
+      role: user.role,
       exp: 24.hours.from_now.to_i
     }
-    JWT.encode(payload, Rails.application.secrets.secret_key_base)
+    JWT.encode(payload, Rails.application.credentials.secret_key_base || 'fallback_secret_for_development', 'HS256')
   end
 end 

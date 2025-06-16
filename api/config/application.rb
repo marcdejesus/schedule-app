@@ -33,9 +33,9 @@ module ScheduleEaseApi
       allow do
         origins case Rails.env
                 when 'development'
-                  'localhost:3000'
+                  ['localhost:3000', 'localhost:3002', 'http://localhost:3000', 'http://localhost:3002']
                 when 'test'
-                  'localhost:3000' # Use specific origin for test environment
+                  ['localhost:3000', 'localhost:3002'] # Use specific origins for test environment
                 else
                   ENV['FRONTEND_URL'] || 'localhost:3000'
                 end

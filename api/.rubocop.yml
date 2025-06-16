@@ -1,0 +1,264 @@
+require:
+  - rubocop-rails
+  - rubocop-rspec
+  - rubocop-performance
+
+AllCops:
+  TargetRubyVersion: 3.2
+  NewCops: enable
+  Exclude:
+    - 'vendor/**/*'
+    - 'db/schema.rb'
+    - 'db/migrate/*'
+    - 'bin/*'
+    - 'config/boot.rb'
+    - 'config/environment.rb'
+    - 'config/application.rb'
+    - 'config/environments/*'
+    - 'config/initializers/*'
+    - 'config/puma.rb'
+    - 'config/routes.rb'
+    - 'Gemfile'
+    - 'Rakefile'
+    - 'config.ru'
+    - 'node_modules/**/*'
+
+# Layout
+Layout/LineLength:
+  Max: 120
+  AllowedPatterns: ['(\A|\s)#']
+
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+
+Layout/FirstArrayElementIndentation:
+  EnforcedStyle: consistent
+
+Layout/FirstHashElementIndentation:
+  EnforcedStyle: consistent
+
+# Style
+Style/Documentation:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Style/StringLiterals:
+  EnforcedStyle: single_quotes
+
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: single_quotes
+
+Style/TrailingCommaInArrayLiteral:
+  EnforcedStyleForMultiline: comma
+
+Style/TrailingCommaInHashLiteral:
+  EnforcedStyleForMultiline: comma
+
+Style/TrailingCommaInArguments:
+  EnforcedStyleForMultiline: comma
+
+Style/ClassAndModuleChildren:
+  EnforcedStyle: compact
+
+Style/EmptyMethod:
+  EnforcedStyle: expanded
+
+Style/Lambda:
+  EnforcedStyle: literal
+
+Style/NumericLiterals:
+  MinDigits: 6
+
+Style/PercentLiteralDelimiters:
+  PreferredDelimiters:
+    '%i': '[]'
+    '%I': '[]'
+    '%r': '{}'
+    '%w': '[]'
+    '%W': '[]'
+
+# Metrics
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/**/*'
+    - 'config/routes.rb'
+    - 'db/seeds.rb'
+
+Metrics/ModuleLength:
+  Exclude:
+    - 'spec/**/*'
+
+Metrics/ClassLength:
+  Max: 150
+  Exclude:
+    - 'spec/**/*'
+
+Metrics/MethodLength:
+  Max: 20
+  Exclude:
+    - 'spec/**/*'
+
+Metrics/AbcSize:
+  Max: 20
+  Exclude:
+    - 'spec/**/*'
+
+Metrics/CyclomaticComplexity:
+  Max: 8
+
+Metrics/PerceivedComplexity:
+  Max: 8
+
+# Naming
+Naming/PredicateName:
+  ForbiddenPrefixes:
+    - is_
+
+Naming/VariableNumber:
+  EnforcedStyle: snake_case
+
+# Rails
+Rails/FilePath:
+  EnforcedStyle: arguments
+
+Rails/HttpStatus:
+  EnforcedStyle: symbolic
+
+Rails/InverseOf:
+  Enabled: false
+
+Rails/SkipsModelValidations:
+  Exclude:
+    - 'spec/**/*'
+
+Rails/Output:
+  Exclude:
+    - 'db/seeds.rb'
+
+Rails/CreateTableWithTimestamps:
+  Enabled: false
+
+Rails/BulkChangeTable:
+  Enabled: false
+
+# RSpec
+RSpec/ExampleLength:
+  Max: 20
+
+RSpec/MultipleExpectations:
+  Max: 5
+
+RSpec/NestedGroups:
+  Max: 4
+
+RSpec/DescribeClass:
+  Exclude:
+    - 'spec/requests/**/*'
+    - 'spec/integration/**/*'
+
+RSpec/FilePath:
+  Exclude:
+    - 'spec/requests/**/*'
+
+RSpec/ContextWording:
+  Prefixes:
+    - when
+    - with
+    - without
+    - if
+    - unless
+    - for
+    - as
+
+RSpec/DescribedClass:
+  EnforcedStyle: explicit
+
+RSpec/MessageSpies:
+  EnforcedStyle: receive
+
+RSpec/NamedSubject:
+  Enabled: false
+
+RSpec/LetSetup:
+  Enabled: false
+
+RSpec/MessageChain:
+  Enabled: false
+
+RSpec/AnyInstance:
+  Enabled: false
+
+# Performance
+Performance/RedundantMerge:
+  MaxKeyValuePairs: 1
+
+Performance/StringReplacement:
+  Enabled: true
+
+Performance/UnfreezeString:
+  Enabled: true
+
+Performance/DeletePrefix:
+  Enabled: true
+
+Performance/DeleteSuffix:
+  Enabled: true
+
+# Security
+Security/Open:
+  Enabled: true
+
+Security/Eval:
+  Enabled: true
+
+Security/JSONLoad:
+  Enabled: true
+
+Security/YAMLLoad:
+  Enabled: true
+
+# Bundler
+Bundler/OrderedGems:
+  Enabled: false
+
+# Lint
+Lint/AmbiguousBlockAssociation:
+  Exclude:
+    - 'spec/**/*'
+
+Lint/EmptyBlock:
+  Exclude:
+    - 'spec/**/*'
+
+Lint/SuppressedException:
+  AllowComments: true
+
+# Disable some cops that conflict with our style
+Style/SymbolArray:
+  Enabled: false
+
+Style/WordArray:
+  Enabled: false
+
+Style/RegexpLiteral:
+  Enabled: false
+
+Style/BlockDelimiters:
+  Enabled: false
+
+Style/GuardClause:
+  MinBodyLength: 3
+
+Style/IfUnlessModifier:
+  Enabled: false
+
+Style/Next:
+  MinBodyLength: 3
+
+Style/RedundantReturn:
+  AllowMultipleReturnValues: true
+
+Style/Semicolon:
+  AllowAsExpressionSeparator: true 
