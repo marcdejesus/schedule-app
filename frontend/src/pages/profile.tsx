@@ -1,5 +1,6 @@
 import React from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import { Layout } from '@/components/layout/Layout';
 import { useAuth } from '@/hooks/useAuth';
 import { 
@@ -11,6 +12,16 @@ import {
 
 export default function ProfilePage() {
   const { user } = useAuth();
+  const router = useRouter();
+
+  const handleEditProfile = () => {
+    router.push('/settings');
+  };
+
+  const handleChangePassword = () => {
+    // We'll create a change password modal/page
+    router.push('/change-password');
+  };
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
@@ -181,10 +192,16 @@ export default function ProfilePage() {
                     </p>
                   </div>
                   <div className="flex space-x-3">
-                    <button className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <button 
+                      onClick={handleEditProfile}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                    >
                       Edit Profile
                     </button>
-                    <button className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <button 
+                      onClick={handleChangePassword}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                    >
                       Change Password
                     </button>
                   </div>

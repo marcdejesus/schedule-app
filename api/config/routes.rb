@@ -57,6 +57,9 @@ Rails.application.routes.draw do
         put 'password/reset', to: 'passwords#update'
         get 'password/reset/verify', to: 'passwords#edit'
         
+        # Password change (for authenticated users)
+        put 'password/change', to: 'passwords#change'
+        
         # Email confirmation
         post 'email/resend_confirmation', to: 'confirmations#create'
         get 'email/confirm', to: 'confirmations#show'

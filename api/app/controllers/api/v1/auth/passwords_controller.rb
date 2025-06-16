@@ -1,5 +1,5 @@
 class Api::V1::Auth::PasswordsController < ApplicationController
-  skip_before_action :authenticate_user!
+  skip_before_action :authenticate_user!, except: [:change]
 
   # POST /api/v1/auth/password/reset
   def create
@@ -80,6 +80,35 @@ class Api::V1::Auth::PasswordsController < ApplicationController
           name: user.name
         }
       }, status: :ok
+    end
+  end
+
+  # PUT /api/v1/auth/password/change
+  def change
+    user = current_user
+    
+    unless user.valid_password?(params[:current_password])
+      render json: {
+        error: 'Invalid current password',
+        message: 'The current password you entered is incorrect'
+      }, status: :unprocessable_entity
+      return
+    end
+
+    if user.update(password: params[:password], password_confirmation: params[:password_confirmation])
+      # Send password changed notification
+      PasswordChangedJob.perform_later(user.id)
+      
+      render json: {
+        message: 'Password changed successfully',
+        status: 'success'
+      }, status: :ok
+    else
+      render json: {
+        error: 'Password change failed',
+        message: user.errors.full_messages.first,
+        details: user.errors.full_messages
+      }, status: :unprocessable_entity
     end
   end
 
