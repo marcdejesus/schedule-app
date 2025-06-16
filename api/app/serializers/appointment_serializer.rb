@@ -1,7 +1,7 @@
 class AppointmentSerializer
   include JSONAPI::Serializer
 
-  attributes :id, :start_time, :end_time, :status, :notes, :cancellation_reason, :created_at, :updated_at
+  attributes :id, :provider_id, :client_id, :start_time, :end_time, :status, :notes, :cancellation_reason, :created_at, :updated_at
 
   attribute :duration_in_minutes do |appointment|
     appointment.duration_in_minutes
