@@ -34,7 +34,7 @@ interface NotificationPreferences {
 }
 
 export default function SettingsPage() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, token, revalidate } = useAuth();
   const { preferences: accessibilityPrefs, updatePreferences: updateAccessibilityPrefs } = useAccessibility();
   
   const [profileData, setProfileData] = useState<UserProfile>({
@@ -59,6 +59,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (user) {
+      console.log('Settings: Updating profileData from user context:', user);
       setProfileData({
         name: user.name || '',
         email: user.email || '',
@@ -72,14 +73,35 @@ export default function SettingsPage() {
   }, [user]);
 
   const handleProfileUpdate = async (updates: Partial<UserProfile>) => {
-    if (!user) return;
+    // Check if we have auth context, if not try to revalidate
+    if (!user || !token) {
+      console.error('Settings: Cannot update profile - no user or token. Current state:', { hasUser: !!user, hasToken: !!token });
+      console.log('Settings: Attempting to revalidate auth state...');
+      
+      try {
+        const revalidatedUser = await revalidate();
+        if (!revalidatedUser) {
+          console.error('Settings: Revalidation failed. User might need to log in again.');
+          alert('Your session has expired. Please refresh the page and log in again.');
+          return;
+        }
+        console.log('Settings: Revalidation successful, retrying profile update...');
+        // Retry the update after successful revalidation
+        return handleProfileUpdate(updates);
+      } catch (error) {
+        console.error('Settings: Revalidation error:', error);
+        alert('Authentication error. Please refresh the page and log in again.');
+        return;
+      }
+    }
 
+    console.log('Settings: Attempting to update profile with:', updates);
     setIsLoading(true);
     try {
       const response = await fetch(`/api/v1/users/${user.id}`, {
         method: 'PATCH',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -92,9 +114,39 @@ export default function SettingsPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setProfileData(prev => ({ ...prev, ...updates }));
-        // Update user context
-        await updateUser();
+        console.log('Settings: Profile update successful, response:', data);
+        
+        // Update local state with the response data from the server
+        if (data.data && data.data.attributes) {
+          const serverUser = data.data.attributes;
+          console.log('Settings: Updating with server response:', serverUser);
+          setProfileData({
+            name: serverUser.name || '',
+            email: serverUser.email || '',
+            bio: serverUser.bio || '',
+            specialties: serverUser.specialties || [],
+            social_links: serverUser.social_links_parsed || {},
+            custom_booking_slug: serverUser.custom_booking_slug || '',
+            avatar_url: serverUser.avatar_url_full || ''
+          });
+        } else {
+          // Fallback to updates if response doesn't have full user data
+          setProfileData(prev => {
+            const newData = { ...prev, ...updates };
+            console.log('Settings: Updated local profileData (fallback):', newData);
+            return newData;
+          });
+        }
+        
+        // Also update user context in background
+        console.log('Settings: Calling updateUser to refresh auth context');
+        try {
+          await updateUser();
+          console.log('Settings: User context updated successfully');
+        } catch (error) {
+          console.error('Settings: Failed to update user context:', error);
+          // Don't throw - the local state update was successful
+        }
       } else {
         throw new Error('Failed to update profile');
       }
@@ -107,7 +159,7 @@ export default function SettingsPage() {
   };
 
   const handleAvatarUpload = async (file: File) => {
-    if (!user) return;
+    if (!user || !token) return;
 
     const formData = new FormData();
     formData.append('avatar', file);
@@ -116,7 +168,7 @@ export default function SettingsPage() {
       const response = await fetch(`/api/v1/users/${user.id}/avatar`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: formData
       });
@@ -133,13 +185,13 @@ export default function SettingsPage() {
   };
 
   const handleAvatarRemove = async () => {
-    if (!user) return;
+    if (!user || !token) return;
 
     try {
       const response = await fetch(`/api/v1/users/${user.id}/avatar`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
 

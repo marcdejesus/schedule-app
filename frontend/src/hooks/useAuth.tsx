@@ -49,6 +49,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     try {
       const storedToken = tokenStorage.get();
+      console.log('useAuth: Checking stored token:', storedToken ? 'found' : 'not found');
       if (storedToken) {
         console.log('useAuth: Found stored token. Fetching user.');
         setIsLoading(true);

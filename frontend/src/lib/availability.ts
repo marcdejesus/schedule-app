@@ -13,7 +13,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 // Create axios instance with auth header
 const createAuthHeaders = () => {
-  const token = localStorage.getItem('auth_token');
+  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 

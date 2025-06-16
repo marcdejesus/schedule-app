@@ -3,11 +3,11 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { Layout } from '@/components/layout/Layout';
 import { useAuth } from '@/hooks/useAuth';
-import { authApi, AuthError } from '@/lib/auth';
+import { authApi, AuthError, tokenStorage } from '@/lib/auth';
 import { ArrowLeftIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 export default function ChangePasswordPage() {
-  const { user, token } = useAuth();
+  const { user, token, revalidate } = useAuth();
   const router = useRouter();
   
   const [formData, setFormData] = useState({
@@ -95,6 +95,13 @@ export default function ChangePasswordPage() {
         formData.confirmPassword,
         token
       );
+
+      // If API returns a new token, update the stored token and refresh auth state
+      if (result.token) {
+        tokenStorage.set(result.token);
+        // Revalidate to update the auth context with the new token
+        await revalidate();
+      }
 
       setSuccess('Password changed successfully!');
       setFormData({

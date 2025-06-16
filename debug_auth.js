@@ -1,0 +1,1 @@
+console.log('localStorage auth_token:', localStorage.getItem('auth_token')); console.log('All localStorage keys:', Object.keys(localStorage)); for (let key in localStorage) { console.log(key + ':', localStorage.getItem(key)); }

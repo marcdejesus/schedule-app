@@ -29,14 +29,14 @@ const defaultPreferences: AccessibilityPreferences = {
 };
 
 export function useAccessibility(): UseAccessibilityReturn {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [preferences, setPreferences] = useState<AccessibilityPreferences>(defaultPreferences);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Load preferences from API
   const loadPreferences = useCallback(async () => {
-    if (!user) return;
+    if (!user || !token) return;
 
     try {
       setIsLoading(true);
@@ -44,7 +44,7 @@ export function useAccessibility(): UseAccessibilityReturn {
       
       const response = await fetch(`/api/v1/users/${user.id}/preferences`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
@@ -61,11 +61,11 @@ export function useAccessibility(): UseAccessibilityReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, token]);
 
   // Update preferences via API
   const updatePreferences = useCallback(async (updates: Partial<AccessibilityPreferences>) => {
-    if (!user) return;
+    if (!user || !token) return;
 
     const newPreferences = { ...preferences, ...updates };
     
@@ -76,7 +76,7 @@ export function useAccessibility(): UseAccessibilityReturn {
       const response = await fetch(`/api/v1/users/${user.id}/preferences`, {
         method: 'PATCH',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -97,7 +97,7 @@ export function useAccessibility(): UseAccessibilityReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [user, preferences]);
+  }, [user, token, preferences]);
 
   // Apply accessibility settings to the DOM
   const applyAccessibilitySettings = useCallback((prefs = preferences) => {

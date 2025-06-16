@@ -152,7 +152,7 @@ export const authApi = {
     return result;
   },
 
-  async changePassword(currentPassword: string, newPassword: string, passwordConfirmation: string, token: string): Promise<{ message: string }> {
+  async changePassword(currentPassword: string, newPassword: string, passwordConfirmation: string, token: string): Promise<{ message: string; token?: string }> {
     const response = await fetch('/api/v1/auth/password/change', {
       method: 'PUT',
       headers: {

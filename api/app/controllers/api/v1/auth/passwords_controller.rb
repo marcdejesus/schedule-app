@@ -99,9 +99,13 @@ class Api::V1::Auth::PasswordsController < ApplicationController
       # Send password changed notification (temporarily disabled)
       # PasswordChangedJob.perform_later(user.id)
       
+      # Generate new JWT token for security
+      new_token = encode_jwt_token(user)
+      
       render json: {
         message: 'Password changed successfully',
-        status: 'success'
+        status: 'success',
+        token: new_token
       }, status: :ok
     else
       Rails.logger.error "Password change failed for user #{user.id}: #{user.errors.full_messages}"
@@ -115,6 +119,21 @@ class Api::V1::Auth::PasswordsController < ApplicationController
   end
 
   private
+
+  def encode_jwt_token(user)
+    payload = {
+      user_id: user.id,
+      email: user.email,
+      role: user.role,
+      exp: 24.hours.from_now.to_i
+    }
+    
+    JWT.encode(payload, jwt_secret, 'HS256')
+  end
+
+  def jwt_secret
+    Rails.application.credentials.secret_key_base || ENV['JWT_SECRET'] || 'fallback_secret_for_development'
+  end
 
   def password_reset_params
     params.permit(:password, :password_confirmation, :reset_password_token)
