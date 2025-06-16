@@ -27,7 +27,7 @@ Rails.application.routes.draw do
       end
 
       # Provider routes
-      resources :providers, only: [:index]
+      resources :providers, only: [:index, :show]
 
       # Authentication routes
       resources :sessions, only: [:index, :create, :destroy] do

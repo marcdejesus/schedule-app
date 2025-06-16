@@ -6,6 +6,7 @@ import {
   CalendarDaysIcon,
   ClockIcon,
   UserIcon,
+  UsersIcon,
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon
 } from '@heroicons/react/24/outline';
@@ -40,6 +41,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: CalendarDaysIcon },
     { name: 'Appointments', href: '/appointments', icon: ClockIcon },
+    { name: 'Providers', href: '/providers', icon: UsersIcon },
     { name: 'Profile', href: '/profile', icon: UserIcon },
     { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
   ];
