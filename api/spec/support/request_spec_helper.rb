@@ -61,7 +61,7 @@ module RequestSpecHelper
 
   def authenticated_headers(user = nil)
     user ||= create(:user)
-    token = JWT.encode({ user_id: user.id, exp: 24.hours.from_now.to_i }, Rails.application.credentials.jwt_secret)
+    token = JWT.encode({ user_id: user.id, exp: 24.hours.from_now.to_i }, Rails.application.credentials.secret_key_base || ENV['JWT_SECRET'] || 'fallback_secret_for_development')
     api_headers('Authorization' => "Bearer #{token}")
   end
 

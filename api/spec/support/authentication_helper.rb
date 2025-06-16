@@ -2,7 +2,7 @@ module AuthenticationHelper
   def sign_in(user)
     token = JWT.encode(
       { user_id: user.id, exp: 24.hours.from_now.to_i },
-      Rails.application.credentials.jwt_secret
+      Rails.application.credentials.secret_key_base || ENV['JWT_SECRET'] || 'fallback_secret_for_development'
     )
     request.headers['Authorization'] = "Bearer #{token}"
     user
@@ -33,14 +33,14 @@ module AuthenticationHelper
   def auth_token_for(user)
     JWT.encode(
       { user_id: user.id, exp: 24.hours.from_now.to_i },
-      Rails.application.credentials.jwt_secret
+      Rails.application.credentials.secret_key_base || ENV['JWT_SECRET'] || 'fallback_secret_for_development'
     )
   end
 
   def expired_auth_token_for(user)
     JWT.encode(
       { user_id: user.id, exp: 1.hour.ago.to_i },
-      Rails.application.credentials.jwt_secret
+      Rails.application.credentials.secret_key_base || ENV['JWT_SECRET'] || 'fallback_secret_for_development'
     )
   end
 

@@ -12,7 +12,7 @@ class Api::V1::SessionsController < ApplicationController
         last_sign_in_ip: current_user.last_sign_in_ip,
         sign_in_count: current_user.sign_in_count
       }
-    }, status: :unauthorized
+    }, status: :ok
   end
 
   # POST /api/v1/sessions
@@ -139,6 +139,6 @@ class Api::V1::SessionsController < ApplicationController
       role: user.role,
       exp: 24.hours.from_now.to_i
     }
-    JWT.encode(payload, Rails.application.credentials.secret_key_base || 'fallback_secret_for_development', 'HS256')
+    JWT.encode(payload, Rails.application.credentials.secret_key_base || ENV['JWT_SECRET'] || 'fallback_secret_for_development', 'HS256')
   end
 end 

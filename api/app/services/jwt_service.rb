@@ -1,5 +1,5 @@
 class JwtService
-  SECRET_KEY = Rails.application.credentials.secret_key_base || 'fallback_secret_for_development'
+  SECRET_KEY = Rails.application.credentials.secret_key_base || ENV['JWT_SECRET'] || 'fallback_secret_for_development'
 
   def self.encode(payload)
     # Add expiration time if not present
