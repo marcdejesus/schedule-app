@@ -19,7 +19,7 @@ module JwtAuthenticatable
 
     begin
       Rails.logger.debug "JwtAuthenticatable: Attempting to decode token"
-      decoded_token = JWT.decode(token, Rails.application.credentials.secret_key_base || 'fallback_secret_for_development', true, algorithm: 'HS256')
+      decoded_token = JWT.decode(token, Rails.application.credentials.secret_key_base || ENV['JWT_SECRET'] || 'fallback_secret_for_development', true, algorithm: 'HS256')
       user_id = decoded_token[0]['user_id']
       @current_user = User.find(user_id)
       Rails.logger.debug "JwtAuthenticatable: Successfully authenticated user #{@current_user.id}"
