@@ -230,7 +230,7 @@ export const authApi = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: signupData ? JSON.stringify(signupData) : undefined
+      body: JSON.stringify(signupData || {})
     });
 
     const data = await response.json();

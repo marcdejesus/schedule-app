@@ -79,11 +79,10 @@ module Api
       end
 
       def oauth_verify
-        # Verify JWT token and get user
+        # User is already authenticated by authenticate_user_from_token! callback
+        # No need to manually decode the token again
         begin
-          token = request.headers['Authorization']&.split(' ')&.last
-          payload = JWT.decode(token, jwt_secret, true, { algorithm: 'HS256' })[0]
-          user = User.find(payload['user_id'])
+          user = current_user
 
           # If this is a signup with role (new Google user), update the role
           if params[:role].present?
@@ -101,9 +100,6 @@ module Api
             user: UserSerializer.new(user).serializable_hash[:data][:attributes],
             token: fresh_token
           }, status: :ok
-        rescue JWT::DecodeError, ActiveRecord::RecordNotFound => e
-          Rails.logger.error "OAuth verification failed: #{e.message}"
-          render json: { message: 'Invalid or expired authentication token' }, status: :unauthorized
         rescue => e
           Rails.logger.error "OAuth verification error: #{e.message}"
           render json: { message: 'Authentication error' }, status: :internal_server_error

@@ -10,7 +10,7 @@ interface RegisterFormProps {
 }
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onSuccess }) => {
-  const { register: registerUser, isLoading, handleOAuthCallback } = useAuth();
+  const { register: registerUser, isLoading } = useAuth();
   const [serverError, setServerError] = useState<string>('');
   const [selectedRole, setSelectedRole] = useState<string>('');
   const router = useRouter();
@@ -24,25 +24,15 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onS
 
   const password = watch('password');
 
-  // Handle OAuth redirect with token in query params
+  // Handle OAuth error in query params (but not token - that's handled by callback page)
   useEffect(() => {
-    const { token, error } = router.query;
-    
-    if (token && typeof token === 'string') {
-      // Process OAuth token
-      handleOAuthCallback(token).then(() => {
-        router.replace(router.pathname);
-        onSuccess?.();
-      }).catch(() => {
-        setServerError('Failed to authenticate with Google');
-      });
-    }
+    const { error } = router.query;
     
     if (error && typeof error === 'string') {
       setServerError(error);
       router.replace(router.pathname);
     }
-  }, [router.query, router, onSuccess, handleOAuthCallback]);
+  }, [router.query, router]);
 
   const onSubmit = async (data: RegisterData & { confirmPassword: string }) => {
     try {

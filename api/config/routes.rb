@@ -37,14 +37,14 @@ Rails.application.routes.draw do
         end
       end
 
+      # OAuth verification (outside namespace to match controller)
+      post 'auth/oauth/verify', to: 'auth#oauth_verify'
+
       # Password reset routes
       namespace :auth do
         get 'google', to: redirect { |params, request|
           "/users/auth/google_oauth2"
         }
-        
-        # OAuth verification
-        post 'oauth/verify', to: 'auth#oauth_verify'
         
         # Password reset
         post 'password/reset', to: 'passwords#create'

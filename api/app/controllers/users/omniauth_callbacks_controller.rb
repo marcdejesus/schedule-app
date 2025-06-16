@@ -75,7 +75,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
   end
 
   def jwt_secret
-    Rails.application.credentials.secret_key_base || 'fallback_secret_for_development'
+    Rails.application.credentials.secret_key_base || ENV['JWT_SECRET'] || 'fallback_secret_for_development'
   end
 
   def user_data(user)

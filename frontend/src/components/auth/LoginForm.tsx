@@ -10,7 +10,7 @@ interface LoginFormProps {
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSuccess }) => {
-  const { login, isLoading, handleOAuthCallback } = useAuth();
+  const { login, isLoading } = useAuth();
   const [serverError, setServerError] = useState<string>('');
   const router = useRouter();
   
@@ -20,25 +20,15 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSucc
     formState: { errors },
   } = useForm<LoginData>();
 
-  // Handle OAuth redirect with token in query params
+  // Handle OAuth error in query params (but not token - that's handled by callback page)
   useEffect(() => {
-    const { token, error } = router.query;
-    
-    if (token && typeof token === 'string') {
-      // Process OAuth token
-      handleOAuthCallback(token).then(() => {
-        router.replace(router.pathname);
-        onSuccess?.();
-      }).catch(() => {
-        setServerError('Failed to authenticate with Google');
-      });
-    }
+    const { error } = router.query;
     
     if (error && typeof error === 'string') {
       setServerError(error);
       router.replace(router.pathname);
     }
-  }, [router.query, router, onSuccess, handleOAuthCallback]);
+  }, [router.query, router]);
 
   const onSubmit = async (data: LoginData) => {
     try {
