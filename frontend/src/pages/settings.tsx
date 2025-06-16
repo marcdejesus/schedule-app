@@ -174,6 +174,14 @@ export default function SettingsPage() {
       });
 
       if (response.ok) {
+        const data = await response.json();
+        if (data.data && data.data.attributes) {
+          const serverUser = data.data.attributes;
+          setProfileData(prev => ({
+            ...prev,
+            avatar_url: serverUser.avatar_url_full || prev.avatar_url
+          }));
+        }
         await updateUser();
       } else {
         throw new Error('Failed to upload avatar');

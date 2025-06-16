@@ -9,6 +9,9 @@ RUN apt-get update -qq && apt-get install -y --fix-missing \
     npm \
     curl \
     netcat-openbsd \
+    imagemagick \
+    libjpeg-dev \
+    libpng-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user early

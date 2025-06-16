@@ -26,9 +26,25 @@ class Api::V1::UsersController < ApplicationController
   # POST /api/v1/users/:id/avatar
   def upload_avatar
     if params[:avatar].present?
-      @user.avatar.attach(params[:avatar])
-      render json: UserSerializer.new(@user).serializable_hash
+      Rails.logger.info "Starting avatar upload for user #{@user.id}"
+      begin
+        @user.avatar.attach(params[:avatar])
+        if @user.avatar.attached?
+          Rails.logger.info "Avatar successfully attached for user #{@user.id}."
+          render json: UserSerializer.new(@user.reload).serializable_hash
+        else
+          Rails.logger.error "Avatar attachment failed for user #{@user.id} after attach call."
+          render json: { error: 'Avatar attachment failed' }, status: :unprocessable_entity
+        end
+      rescue => e
+        Rails.logger.error "Error uploading avatar for user #{@user.id}: #{e.message}"
+        render json: {
+          error: 'An unexpected error occurred during avatar upload',
+          details: e.message
+        }, status: :internal_server_error
+      end
     else
+      Rails.logger.warn "Avatar upload attempt for user #{@user.id} with no avatar file provided."
       render json: {
         error: 'Avatar file is required'
       }, status: :unprocessable_entity

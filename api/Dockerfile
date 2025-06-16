@@ -8,7 +8,10 @@ RUN apk add --no-cache \
     tzdata \
     nodejs \
     npm \
-    curl
+    curl \
+    imagemagick \
+    libjpeg-turbo-dev \
+    libpng-dev
 
 # Set working directory
 WORKDIR /app
