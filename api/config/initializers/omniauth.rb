@@ -1,17 +1,11 @@
-Rails.application.config.middleware.use OmniAuth::Builder do
-  provider :google_oauth2, 
-           ENV['GOOGLE_CLIENT_ID'], 
-           ENV['GOOGLE_CLIENT_SECRET'],
-           {
-             scope: 'email,profile',
-             prompt: 'select_account',
-             image_aspect_ratio: 'square',
-             image_size: 50,
-             access_type: 'offline',
-             approval_prompt: 'auto'
-           }
-end
-
-# CSRF protection for OmniAuth
-OmniAuth.config.allowed_request_methods = [:post, :get]
-OmniAuth.config.silence_get_warning = true 
+# Configure OmniAuth
+OmniAuth.configure do |config|
+  # Allow GET requests for OAuth flows
+  config.allowed_request_methods = [:get, :post]
+  config.silence_get_warning = true
+  
+  # Disable CSRF protection for development
+  # In production, you should implement proper CSRF protection
+  config.request_validation_phase = nil
+  config.before_request_phase = nil
+end 
