@@ -27,6 +27,7 @@ Rails.application.routes.draw do
         member do
           post :avatar, action: :upload_avatar
           delete :avatar, action: :remove_avatar
+          get 'avatar/debug', action: :debug_avatar
           get :preferences
           patch :preferences, action: :update_preferences
         end

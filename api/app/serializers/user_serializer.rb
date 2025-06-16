@@ -17,7 +17,24 @@ class UserSerializer
   end
 
   attribute :avatar_url_full do |user|
-    user.avatar_url_or_default
+    begin
+      Rails.logger.debug "UserSerializer: Generating avatar_url_full for user #{user.id}"
+      Rails.logger.debug "  - Avatar attached: #{user.avatar.attached?}"
+      if user.avatar.attached?
+        Rails.logger.debug "  - Avatar filename: #{user.avatar.filename}"
+        Rails.logger.debug "  - Avatar content type: #{user.avatar.content_type}"
+        Rails.logger.debug "  - Avatar key: #{user.avatar.key}"
+      end
+      Rails.logger.debug "  - avatar_url field: #{user.avatar_url}"
+      
+      url = user.avatar_url_or_default
+      Rails.logger.debug "  - Generated URL: #{url}"
+      url
+    rescue => e
+      Rails.logger.error "UserSerializer: Error generating avatar_url_full for user #{user.id}: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      user.gravatar_url # Fallback to gravatar
+    end
   end
 
   attribute :booking_url_slug do |user|

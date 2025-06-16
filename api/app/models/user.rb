@@ -140,13 +140,33 @@ class User < ApplicationRecord
   end
 
   def avatar_url_or_default
-    if avatar.attached?
-      Rails.application.routes.url_helpers.rails_blob_url(avatar, only_path: true)
-    elsif avatar_url.present?
-      avatar_url
-    else
-      # Return a default avatar URL or gravatar
-      gravatar_url
+    Rails.logger.debug "User#avatar_url_or_default called for user #{id}"
+    
+    begin
+      if avatar.attached?
+        Rails.logger.debug "  - Avatar is attached, generating rails_blob_url"
+        Rails.logger.debug "  - Avatar filename: #{avatar.filename}"
+        Rails.logger.debug "  - Avatar key: #{avatar.key}"
+        Rails.logger.debug "  - Avatar service: #{avatar.service_name}"
+        
+        url = Rails.application.routes.url_helpers.rails_blob_url(avatar, only_path: true)
+        Rails.logger.debug "  - Generated blob URL: #{url}"
+        return url
+      elsif avatar_url.present?
+        Rails.logger.debug "  - Using stored avatar_url: #{avatar_url}"
+        return avatar_url
+      else
+        # Return a default avatar URL or gravatar
+        gravatar = gravatar_url
+        Rails.logger.debug "  - No avatar found, using gravatar: #{gravatar}"
+        return gravatar
+      end
+    rescue => e
+      Rails.logger.error "Error in avatar_url_or_default for user #{id}: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      fallback = gravatar_url
+      Rails.logger.debug "  - Falling back to gravatar: #{fallback}"
+      return fallback
     end
   end
 

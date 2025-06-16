@@ -3,6 +3,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { Layout } from '@/components/layout/Layout';
 import { useAuth } from '@/hooks/useAuth';
+import { Avatar } from '@/components/ui/Avatar';
 import { 
   UserIcon,
   EnvelopeIcon,
@@ -71,16 +72,21 @@ export default function ProfilePage() {
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-8">
               <div className="flex items-center">
-                <div className="bg-white rounded-full p-3">
-                  <UserIcon className="h-12 w-12 text-gray-600" />
+                <div className="bg-white rounded-full p-1">
+                  <Avatar 
+                    src={user?.avatar_url_full} 
+                    alt={`${user?.name}'s profile picture`}
+                    size="lg"
+                    showLoadingState={true}
+                  />
                 </div>
                 <div className="ml-6">
                   <h2 className="text-2xl font-bold text-white">
                     {user?.name}
                   </h2>
-                                     <p className="text-blue-100">
-                     Member since {(user as any)?.created_at ? new Date((user as any).created_at).toLocaleDateString() : 'N/A'}
-                   </p>
+                  <p className="text-blue-100">
+                    Member since {(user as any)?.created_at ? new Date((user as any).created_at).toLocaleDateString() : 'N/A'}
+                  </p>
                 </div>
               </div>
             </div>

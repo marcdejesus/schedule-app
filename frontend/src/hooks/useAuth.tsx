@@ -44,6 +44,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return null;
     }
 
+    console.log('=== useAuth revalidate Debug Start ===');
     console.log('useAuth: revalidate called');
     revalidatingRef.current = true;
     
@@ -55,10 +56,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsLoading(true);
         
         try {
+          console.log('useAuth: Calling authApi.getCurrentUser...');
           const userData = await authApi.getCurrentUser(storedToken);
-          console.log('useAuth: Got user data', userData);
+          console.log('useAuth: Got user data', {
+            id: userData.id,
+            name: userData.name,
+            email: userData.email,
+            avatar_url: userData.avatar_url,
+            avatar_url_full: userData.avatar_url_full
+          });
           setUser(userData);
           setToken(storedToken);
+          console.log('=== useAuth revalidate Debug End (Success) ===');
           return userData;
         } catch (error) {
           console.error('useAuth: Failed to revalidate user:', error);
@@ -73,12 +82,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser(null);
           setToken(null);
           tokenStorage.remove();
+          console.log('=== useAuth revalidate Debug End (Auth Error) ===');
           return null;
         }
       } else {
         console.log('useAuth: No stored token found.');
         setUser(null);
         setToken(null);
+        console.log('=== useAuth revalidate Debug End (No Token) ===');
         return null;
       }
     } catch (error) {
@@ -87,6 +98,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null);
       setToken(null);
       tokenStorage.remove();
+      console.log('=== useAuth revalidate Debug End (Unexpected Error) ===');
       return null;
     } finally {
       setIsLoading(false);

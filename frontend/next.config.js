@@ -13,6 +13,10 @@ const nextConfig = {
         source: '/api/:path*',
         destination: `${internalApiUrl}/api/:path*`,
       },
+      {
+        source: '/rails/:path*',
+        destination: `${internalApiUrl}/rails/:path*`,
+      },
     ]
   },
   async headers() {

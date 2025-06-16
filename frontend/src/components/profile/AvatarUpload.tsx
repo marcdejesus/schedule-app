@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { UserIcon, PhotoIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { Avatar } from '@/components/ui/Avatar';
 
 interface AvatarUploadProps {
   currentAvatarUrl?: string;
@@ -21,27 +22,52 @@ export function AvatarUpload({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (file: File) => {
+    console.log('=== AvatarUpload Component Debug Start ===');
+    console.log('File selected:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified
+    });
+    
     // Validate file type
+    console.log('Validating file type...');
     if (!file.type.startsWith('image/')) {
+      console.error('File validation failed: not an image file');
+      console.log('=== AvatarUpload Component Debug End (Invalid Type) ===');
       alert('Please select an image file');
       return;
     }
+    console.log('File type validation passed');
 
     // Validate file size (5MB max)
+    console.log('Validating file size...');
     if (file.size > 5 * 1024 * 1024) {
+      console.error('File validation failed: size too large', file.size);
+      console.log('=== AvatarUpload Component Debug End (Too Large) ===');
       alert('File size must be less than 5MB');
       return;
     }
+    console.log('File size validation passed');
 
     // Create preview
+    console.log('Creating preview URL...');
     const url = URL.createObjectURL(file);
+    console.log('Preview URL created:', url);
     setPreviewUrl(url);
 
     try {
+      console.log('Calling onUpload prop...');
       await onUpload(file);
+      console.log('onUpload completed successfully');
       setPreviewUrl(null);
+      console.log('Preview URL cleared');
+      console.log('=== AvatarUpload Component Debug End (Success) ===');
     } catch (error) {
+      console.error('onUpload failed:', error);
       setPreviewUrl(null);
+      console.log('Preview URL cleared due to error');
+      console.log('=== AvatarUpload Component Debug End (Upload Error) ===');
       alert('Failed to upload avatar. Please try again.');
     }
   };
@@ -102,27 +128,22 @@ export function AvatarUpload({
       {/* Avatar Display */}
       <div className="relative">
         <div 
-          className={`w-32 h-32 rounded-full border-4 border-gray-200 overflow-hidden bg-gray-50 ${
+          className={`border-4 border-gray-200 rounded-full ${
             dragOver ? 'border-blue-400 bg-blue-50' : ''
           } ${isLoading ? 'opacity-50' : ''}`}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
         >
-          {displayUrl ? (
-            <img
-              src={displayUrl}
-              alt="Profile avatar"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400">
-              <UserIcon className="w-16 h-16" aria-hidden="true" />
-            </div>
-          )}
+          <Avatar 
+            src={displayUrl}
+            alt="Profile avatar"
+            size="xl"
+            showLoadingState={true}
+          />
         </div>
         
-        {/* Loading Overlay */}
+        {/* Upload Loading Overlay */}
         {isLoading && (
           <div className="absolute inset-0 rounded-full bg-black bg-opacity-50 flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
