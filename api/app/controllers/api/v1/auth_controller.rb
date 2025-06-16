@@ -1,7 +1,7 @@
 module Api
   module V1
     class AuthController < ApplicationController
-      skip_before_action :authenticate_user_unless_public_endpoint!, except: [:oauth_verify]
+      skip_before_action :authenticate_user_from_token!, except: [:oauth_verify]
 
       def email_confirmation
         user = User.confirm_by_token(params[:confirmation_token])

@@ -1,5 +1,5 @@
 class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
-  skip_before_action :authenticate_user_unless_public_endpoint!
+  skip_before_action :authenticate_user_from_token!
   respond_to :json
 
   def google_oauth2
