@@ -7,7 +7,7 @@ export default function OAuthCallback() {
   const router = useRouter();
   const { handleOAuthCallback } = useAuth();
   const [error, setError] = useState<string | null>(null);
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [status, setStatus] = useState<'loading' | 'processing' | 'success' | 'error'>('loading');
   
   useEffect(() => {
     // Only proceed when router is ready
@@ -16,7 +16,10 @@ export default function OAuthCallback() {
     const { token, error, signup } = router.query;
     const isSignup = signup === 'true';
     
+    console.log('OAuth Callback - Query params:', { token: token ? `${token.toString().substring(0, 20)}...` : 'none', error, signup });
+    
     if (error && typeof error === 'string') {
+      console.log('OAuth Callback - Error in query params:', error);
       setError(error);
       setStatus('error');
       // Redirect back to login after a delay
@@ -28,6 +31,7 @@ export default function OAuthCallback() {
 
     if (!token || typeof token !== 'string') {
       // No token found, redirect to login
+      console.log('OAuth Callback - No token found in query params');
       setError('No authentication token provided');
       setStatus('error');
       setTimeout(() => {
@@ -35,6 +39,14 @@ export default function OAuthCallback() {
       }, 2000);
       return;
     }
+
+    // Prevent multiple calls by checking if we're already processing
+    if (status !== 'loading') {
+      console.log('OAuth Callback - Already processed, skipping. Status:', status);
+      return;
+    }
+
+    console.log('OAuth Callback - Processing token:', token.substring(0, 20) + '...');
 
     // Get role from localStorage if this is a signup flow
     let role: string | null = null;
@@ -53,9 +65,11 @@ export default function OAuthCallback() {
       }
     }
 
-    // Process the OAuth token
+    // Process the OAuth token (only once)
+    setStatus('processing'); // Prevent re-runs
     handleOAuthCallback(token, isSignup && role ? { role } : undefined)
       .then(() => {
+        console.log('OAuth Callback - Success!');
         // Set success status
         setStatus('success');
         // Redirect to dashboard or home after a brief delay
@@ -72,7 +86,7 @@ export default function OAuthCallback() {
           router.push(isSignup ? '/register' : '/login');
         }, 3000);
       });
-  }, [router.isReady, router.query, router, handleOAuthCallback]);
+  }, [router.isReady, router.query.token, router.query.error, router.query.signup, status]);
 
   return (
     <>

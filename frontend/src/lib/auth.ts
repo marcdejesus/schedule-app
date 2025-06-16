@@ -223,7 +223,9 @@ export const authApi = {
   },
 
   async verifyOAuthToken(token: string, signupData?: { role?: string }): Promise<AuthResponse> {
-    console.log('authApi: verifyOAuthToken called');
+    console.log('authApi: verifyOAuthToken called with token:', token.substring(0, 20) + '...');
+    console.log('authApi: verifyOAuthToken signupData:', signupData);
+    
     const response = await fetch(`${API_BASE_URL}/api/v1/auth/oauth/verify`, {
       method: 'POST',
       headers: {
@@ -233,7 +235,10 @@ export const authApi = {
       body: JSON.stringify(signupData || {})
     });
 
+    console.log('authApi: verifyOAuthToken response status:', response.status);
     const data = await response.json();
+    console.log('authApi: verifyOAuthToken response data:', data);
+    
     if (!response.ok) {
       throw new AuthError(data.message || 'Failed to verify OAuth token', response.status);
     }
