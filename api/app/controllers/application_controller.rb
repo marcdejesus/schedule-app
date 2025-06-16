@@ -9,7 +9,7 @@ class ApplicationController < ActionController::API
   private
 
   def current_user_serialized
-    UserSerializer.new(current_user).serialized_json
+    UserSerializer.new(current_user).serializable_hash
   end
 
   def not_found(exception)

@@ -3,18 +3,18 @@ class Api::V1::UsersController < ApplicationController
 
   # GET /api/v1/users/me
   def me
-    render json: UserSerializer.new(current_user).serialized_json
+    render json: UserSerializer.new(current_user).serializable_hash
   end
 
   # GET /api/v1/users/:id
   def show
-    render json: UserSerializer.new(@user).serialized_json
+    render json: UserSerializer.new(@user).serializable_hash
   end
 
   # PATCH/PUT /api/v1/users/:id
   def update
     if @user.update(user_params)
-      render json: UserSerializer.new(@user).serialized_json
+      render json: UserSerializer.new(@user).serializable_hash
     else
       render json: {
         error: 'Update failed',
@@ -34,7 +34,7 @@ class Api::V1::UsersController < ApplicationController
   # GET /api/v1/users/providers
   def providers
     providers = User.providers.includes(:availability_slots)
-    render json: UserSerializer.new(providers).serialized_json
+    render json: UserSerializer.new(providers).serializable_hash
   end
 
   private

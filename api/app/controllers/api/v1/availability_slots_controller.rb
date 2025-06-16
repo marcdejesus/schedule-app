@@ -23,12 +23,12 @@ class Api::V1::AvailabilitySlotsController < ApplicationController
       slots = slots.available
     end
 
-    render json: AvailabilitySlotSerializer.new(slots).serialized_json
+    render json: AvailabilitySlotSerializer.new(slots).serializable_hash
   end
 
   # GET /api/v1/availability_slots/:id
   def show
-    render json: AvailabilitySlotSerializer.new(@availability_slot).serialized_json
+    render json: AvailabilitySlotSerializer.new(@availability_slot).serializable_hash
   end
 
   # POST /api/v1/availability_slots
@@ -36,7 +36,7 @@ class Api::V1::AvailabilitySlotsController < ApplicationController
     @availability_slot = current_user.availability_slots.build(availability_slot_params)
 
     if @availability_slot.save
-      render json: AvailabilitySlotSerializer.new(@availability_slot).serialized_json, 
+      render json: AvailabilitySlotSerializer.new(@availability_slot).serializable_hash, 
              status: :created
     else
       render json: {
@@ -51,7 +51,7 @@ class Api::V1::AvailabilitySlotsController < ApplicationController
     return unauthorized unless can_modify_slot?
 
     if @availability_slot.update(availability_slot_params)
-      render json: AvailabilitySlotSerializer.new(@availability_slot).serialized_json
+      render json: AvailabilitySlotSerializer.new(@availability_slot).serializable_hash
     else
       render json: {
         error: 'Update failed',
@@ -78,7 +78,7 @@ class Api::V1::AvailabilitySlotsController < ApplicationController
     date = params[:date] ? Date.parse(params[:date]) : Date.current
     slots = user.availability_slots.for_date(date).available
 
-    render json: AvailabilitySlotSerializer.new(slots).serialized_json
+    render json: AvailabilitySlotSerializer.new(slots).serializable_hash
   end
 
   private
