@@ -243,16 +243,6 @@ export default function SettingsPage() {
             avatar_url: serverUser.avatar_url,
             avatar_url_full: serverUser.avatar_url_full
           });
-          
-          console.log('Updating local profile data...');
-          setProfileData(prev => {
-            const updated = {
-              ...prev,
-              avatar_url: serverUser.avatar_url_full || prev.avatar_url
-            };
-            console.log('Local profile data updated:', updated);
-            return updated;
-          });
         } else {
           console.warn('Response data missing expected structure:', data);
         }
@@ -671,7 +661,7 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <AvatarUpload
-                    currentAvatarUrl={profileData.avatar_url}
+                    currentAvatarUrl={user?.avatar_url_full || user?.avatar_url}
                     onUpload={handleAvatarUpload}
                     onRemove={handleAvatarRemove}
                     isLoading={isLoading}
