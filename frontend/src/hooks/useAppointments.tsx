@@ -20,11 +20,53 @@ const QUERY_KEYS = {
 } as const;
 
 // Utility function to transform appointment data
-const transformAppointmentData = (appointmentsResponse: AppointmentsResponse | undefined): AppointmentWithUsers[] => {
-  return appointmentsResponse?.data?.map(item => ({
-    ...item.attributes,
-    id: item.id
-  })) || [];
+const transformAppointmentData = (appointmentsResponse: any): AppointmentWithUsers[] => {
+  if (!appointmentsResponse?.data) return [];
+
+  // Create a lookup map for included resources
+  const includedMap = new Map();
+  if (appointmentsResponse.included) {
+    appointmentsResponse.included.forEach((item: any) => {
+      includedMap.set(`${item.type}-${item.id}`, item.attributes);
+    });
+  }
+
+  return appointmentsResponse.data.map((item: any) => {
+    const appointment = {
+      ...item.attributes,
+      id: item.id
+    };
+
+    // Add provider data from included resources
+    if (item.relationships?.provider?.data) {
+      const providerId = item.relationships.provider.data.id;
+      const providerData = includedMap.get(`user-${providerId}`);
+      if (providerData) {
+        appointment.provider = {
+          id: providerId,
+          name: providerData.name,
+          email: providerData.email,
+          role: providerData.role
+        };
+      }
+    }
+
+    // Add client data from included resources
+    if (item.relationships?.client?.data) {
+      const clientId = item.relationships.client.data.id;
+      const clientData = includedMap.get(`user-${clientId}`);
+      if (clientData) {
+        appointment.client = {
+          id: clientId,
+          name: clientData.name,
+          email: clientData.email,
+          role: clientData.role
+        };
+      }
+    }
+
+    return appointment as AppointmentWithUsers;
+  });
 };
 
 export const useAppointments = (filters?: AppointmentFilters) => {

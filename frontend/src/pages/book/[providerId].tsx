@@ -11,35 +11,61 @@ import {
   UserIcon, 
   EnvelopeIcon,
   CheckCircleIcon,
-  ArrowLeftIcon
+  ArrowLeftIcon,
+  ChatBubbleLeftEllipsisIcon
 } from '@heroicons/react/24/outline';
 
 import { bookingApi, BookingError } from '@/lib/booking';
 import { TimezoneUtils } from '@/lib/timezone';
 import { Provider, BookingSlot, BookingData } from '@/types/appointments';
+import { useAuth } from '@/hooks/useAuth';
 import 'react-calendar/dist/Calendar.css';
 
 interface BookingFormData {
   client_name: string;
   client_email: string;
   notes?: string;
+  use_account_details: boolean;
 }
 
 const PublicBookingPage: React.FC = () => {
   const router = useRouter();
   const { providerId } = router.query;
+  const { user, isAuthenticated } = useAuth();
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedSlot, setSelectedSlot] = useState<BookingSlot | null>(null);
   const [currentStep, setCurrentStep] = useState<'date' | 'time' | 'details' | 'confirmation'>('date');
   const [userTimezone] = useState(() => TimezoneUtils.getUserTimezone());
+  const [useAccountDetails, setUseAccountDetails] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-    reset
-  } = useForm<BookingFormData>();
+    reset,
+    setValue,
+    watch
+  } = useForm<BookingFormData>({
+    defaultValues: {
+      use_account_details: false
+    }
+  });
+
+  const watchUseAccountDetails = watch('use_account_details');
+
+  // Handle account details toggle
+  useEffect(() => {
+    if (watchUseAccountDetails && user) {
+      setValue('client_name', user.name || '');
+      setValue('client_email', user.email || '');
+      setUseAccountDetails(true);
+    } else {
+      setValue('client_name', '');
+      setValue('client_email', '');
+      setUseAccountDetails(false);
+    }
+  }, [watchUseAccountDetails, user, setValue]);
 
   // Fetch provider information
   const {
@@ -78,9 +104,10 @@ const PublicBookingPage: React.FC = () => {
   const createBookingMutation = useMutation(
     (bookingData: BookingData) => bookingApi.createPublicBooking(bookingData),
     {
-      onSuccess: () => {
+      onSuccess: (data) => {
         setCurrentStep('confirmation');
         toast.success('Booking created successfully!');
+        console.log('Booking confirmation:', data);
       },
       onError: (error: BookingError) => {
         toast.error(error.message || 'Failed to create booking');
@@ -295,7 +322,30 @@ const PublicBookingPage: React.FC = () => {
                   </div>
                 </div>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                  {/* Account Details Option */}
+                  {isAuthenticated && user ? (
+                    <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                      <div className="flex items-center">
+                        <input
+                          {...register('use_account_details')}
+                          type="checkbox"
+                          id="use_account_details"
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor="use_account_details" className="ml-2 block text-sm text-blue-900">
+                          Use my account details ({user.name} - {user.email})
+                        </label>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
+                      <p className="text-sm text-gray-600">
+                        💡 <strong>Tip:</strong> <a href="/login" className="text-blue-600 hover:text-blue-800 underline">Sign in</a> to save your details and manage your appointments easily.
+                      </p>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Full Name *
@@ -305,7 +355,10 @@ const PublicBookingPage: React.FC = () => {
                       <input
                         {...register('client_name', { required: 'Name is required' })}
                         type="text"
-                        className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        disabled={useAccountDetails}
+                        className={`pl-10 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          useAccountDetails ? 'bg-gray-50 text-gray-500' : ''
+                        }`}
                         placeholder="Enter your full name"
                       />
                     </div>
@@ -329,7 +382,10 @@ const PublicBookingPage: React.FC = () => {
                           }
                         })}
                         type="email"
-                        className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        disabled={useAccountDetails}
+                        className={`pl-10 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          useAccountDetails ? 'bg-gray-50 text-gray-500' : ''
+                        }`}
                         placeholder="Enter your email address"
                       />
                     </div>
@@ -340,14 +396,18 @@ const PublicBookingPage: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Additional Notes (Optional)
+                      <ChatBubbleLeftEllipsisIcon className="inline h-4 w-4 mr-1" />
+                      Comments for {provider.name} (Optional)
                     </label>
                     <textarea
                       {...register('notes')}
-                      rows={3}
+                      rows={4}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Any additional information or special requests..."
+                      placeholder="Share any specific requirements, questions, or information that would help prepare for your appointment..."
                     />
+                    <p className="mt-1 text-xs text-gray-500">
+                      This message will be sent directly to {provider.name} with your booking request.
+                    </p>
                   </div>
 
                   <button
@@ -368,30 +428,48 @@ const PublicBookingPage: React.FC = () => {
                 <p className="text-gray-600 mb-6">
                   Your appointment has been successfully booked. You&apos;ll receive a confirmation email shortly.
                 </p>
-                <div className="bg-gray-50 rounded-md p-4 mb-6">
-                  <h3 className="font-medium text-gray-900 mb-2">Appointment Details</h3>
-                  <p className="text-sm text-gray-600">
-                    With: <span className="font-medium">{provider.name}</span>
-                  </p>
-                  {selectedSlot && (
-                    <>
-                      <p className="text-sm text-gray-600">
-                        Date: <span className="font-medium">
-                          {TimezoneUtils.formatDateWithTimezone(selectedDate, userTimezone)}
-                        </span>
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        Time: <span className="font-medium">{selectedSlot.display}</span>
-                      </p>
-                    </>
-                  )}
+                <div className="bg-gray-50 rounded-md p-4 mb-6 text-left">
+                  <h3 className="font-medium text-gray-900 mb-3">Appointment Details</h3>
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium">Provider:</span> {provider.name}
+                    </p>
+                    {selectedSlot && (
+                      <>
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Date:</span> {TimezoneUtils.formatDateWithTimezone(selectedDate, userTimezone)}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Time:</span> {selectedSlot.display}
+                        </p>
+                      </>
+                    )}
+                    {createBookingMutation.data?.appointment?.notes && (
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Your Comments:</span>
+                        </p>
+                        <p className="text-sm text-gray-700 mt-1 italic">
+                          &quot;{createBookingMutation.data.appointment.notes}&quot;
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <button
-                  onClick={() => router.push('/')}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md"
-                >
-                  Back to Home
-                </button>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button
+                    onClick={() => router.push('/providers')}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md"
+                  >
+                    Browse More Providers
+                  </button>
+                  <button
+                    onClick={() => router.push('/')}
+                    className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-md"
+                  >
+                    Back to Home
+                  </button>
+                </div>
               </div>
             )}
           </div>

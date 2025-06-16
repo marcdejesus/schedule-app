@@ -62,7 +62,7 @@ export const authApi = {
     if (!response.ok) {
       throw new AuthError(data.message || 'Failed to get user', response.status);
     }
-    return data.data.attributes;
+    return data.user;
   },
 
   async logout(token: string): Promise<void> {

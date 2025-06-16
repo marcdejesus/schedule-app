@@ -89,8 +89,23 @@ export interface BookingData {
 }
 
 export interface BookingConfirmation {
-  appointment: Appointment;
-  provider: Provider;
+  appointment: {
+    id: number;
+    start_time: string;
+    end_time: string;
+    status: string;
+    notes?: string;
+    duration_in_minutes: number;
+    time_range: string;
+    formatted_date: string;
+    formatted_time: string;
+  };
+  provider: {
+    id: number;
+    name: string;
+    email: string;
+    timezone: string;
+  };
   client: {
     name: string;
     email: string;
