@@ -169,7 +169,11 @@ export const authApi = {
     const result = await response.json();
 
     if (!response.ok) {
-      throw new AuthError(result.message || 'Password change failed', response.status);
+      // Use detailed validation errors if available
+      const errorMessage = result.details && result.details.length > 0 
+        ? result.details.join(', ')
+        : result.message || 'Password change failed';
+      throw new AuthError(errorMessage, response.status);
     }
 
     return result;
@@ -280,6 +284,7 @@ export const tokenStorage = {
   set(token: string): void {
     if (typeof window === 'undefined') return;
     localStorage.setItem('auth_token', token);
+    console.log('tokenStorage: Token saved to localStorage as auth_token:', token ? 'yes' : 'no');
   },
 
   remove(): void {

@@ -7,7 +7,7 @@ import { authApi, AuthError } from '@/lib/auth';
 import { ArrowLeftIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 export default function ChangePasswordPage() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const router = useRouter();
   
   const [formData, setFormData] = useState({
@@ -84,7 +84,6 @@ export default function ChangePasswordPage() {
     setSuccess('');
 
     try {
-      const token = localStorage.getItem('token');
       if (!token) {
         setError('Authentication token not found. Please log in again.');
         return;

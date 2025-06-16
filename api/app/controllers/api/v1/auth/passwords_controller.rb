@@ -104,10 +104,12 @@ class Api::V1::Auth::PasswordsController < ApplicationController
         status: 'success'
       }, status: :ok
     else
+      Rails.logger.error "Password change failed for user #{user.id}: #{user.errors.full_messages}"
       render json: {
         error: 'Password change failed',
-        message: user.errors.full_messages.first,
-        details: user.errors.full_messages
+        message: user.errors.full_messages.first || 'Password validation failed',
+        details: user.errors.full_messages,
+        validation_errors: user.errors.as_json
       }, status: :unprocessable_entity
     end
   end
